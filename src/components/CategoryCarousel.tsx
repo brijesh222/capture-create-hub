@@ -1,7 +1,8 @@
 import { useRef, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { categories } from "@/data/categories";
+import { useSiteConfig } from "@/context/SiteConfigContext";
+import { getSectionStyle } from "@/lib/site-config-utils";
 
 import catWedding from "@/assets/cat-wedding.jpg";
 import catPreWedding from "@/assets/cat-pre-wedding.jpg";
@@ -12,7 +13,7 @@ import catHotel from "@/assets/cat-hotel.jpg";
 import catProduct from "@/assets/cat-product.jpg";
 import catFood from "@/assets/cat-food.jpg";
 
-const categoryImages: Record<string, string> = {
+const defaultCategoryImages: Record<string, string> = {
   wedding: catWedding,
   "pre-wedding": catPreWedding,
   birthday: catBirthday,
@@ -23,10 +24,22 @@ const categoryImages: Record<string, string> = {
   food: catFood,
 };
 
+function getCategoryThumbnail(thumbnailUrl: string, slug: string): string {
+  return (
+    thumbnailUrl?.trim() ||
+    defaultCategoryImages[slug] ||
+    Object.values(defaultCategoryImages)[0] ||
+    ""
+  );
+}
+
 const CategoryCarousel = () => {
   const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const { config } = useSiteConfig();
+  const categories = config.categories;
+  const sectionStyle = getSectionStyle(config, "categories");
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -35,7 +48,6 @@ const CategoryCarousel = () => {
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  // Auto-scroll for desktop
   useEffect(() => {
     if (isMobile || !scrollRef.current) return;
     const el = scrollRef.current;
@@ -50,9 +62,11 @@ const CategoryCarousel = () => {
     };
 
     animId = requestAnimationFrame(scroll);
-    
+
     const pause = () => cancelAnimationFrame(animId);
-    const resume = () => { animId = requestAnimationFrame(scroll); };
+    const resume = () => {
+      animId = requestAnimationFrame(scroll);
+    };
     el.addEventListener("mouseenter", pause);
     el.addEventListener("mouseleave", resume);
 
@@ -67,11 +81,10 @@ const CategoryCarousel = () => {
     navigate(`/category/${slug}`);
   };
 
-  // Duplicate categories for infinite scroll on desktop
   const displayCategories = isMobile ? categories : [...categories, ...categories];
 
   return (
-    <section className="py-16 md:py-24">
+    <section className="py-16 md:py-24" style={sectionStyle}>
       <div className="px-6 text-center">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -91,7 +104,6 @@ const CategoryCarousel = () => {
         </motion.div>
       </div>
 
-      {/* Desktop: auto-scrolling row, Mobile: swipeable cards */}
       <div
         ref={scrollRef}
         className={`flex gap-5 px-6 ${
@@ -100,34 +112,37 @@ const CategoryCarousel = () => {
             : "overflow-hidden"
         }`}
       >
-        {displayCategories.map((cat, idx) => (
-          <motion.div
-            key={`${cat.id}-${idx}`}
-            whileHover={{ y: -8 }}
-            onClick={() => handleClick(cat.slug)}
-            className={`group cursor-pointer ${
-              isMobile ? "w-[280px] flex-shrink-0 snap-center" : "w-[280px] flex-shrink-0"
-            }`}
-          >
-            <div className="relative overflow-hidden rounded-xl shadow-elevated">
-              <img
-                src={categoryImages[cat.slug]}
-                alt={cat.name}
-                className="h-[360px] w-full object-cover transition-transform duration-500 group-hover:scale-110"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-5">
-                <span className="mb-1 block text-2xl">{cat.icon}</span>
-                <h3 className="font-display text-lg font-semibold text-foreground">
-                  {cat.name}
-                </h3>
-                <p className="font-body text-xs text-muted-foreground">
-                  {cat.description}
-                </p>
+        {displayCategories.map((cat, idx) => {
+          const thumb = getCategoryThumbnail(cat.thumbnailUrl, cat.slug);
+          return (
+            <motion.div
+              key={`${cat.id}-${idx}`}
+              whileHover={{ y: -8 }}
+              onClick={() => handleClick(cat.slug)}
+              className={`group cursor-pointer ${
+                isMobile ? "w-[280px] flex-shrink-0 snap-center" : "w-[280px] flex-shrink-0"
+              }`}
+            >
+              <div className="relative overflow-hidden rounded-xl shadow-elevated">
+                <img
+                  src={thumb}
+                  alt={cat.name}
+                  className="h-[360px] w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-5">
+                  <span className="mb-1 block text-2xl">{cat.icon}</span>
+                  <h3 className="font-display text-lg font-semibold text-foreground">
+                    {cat.name}
+                  </h3>
+                  <p className="font-body text-xs text-muted-foreground">
+                    {cat.description}
+                  </p>
+                </div>
               </div>
-            </div>
-          </motion.div>
-        ))}
+            </motion.div>
+          );
+        })}
       </div>
     </section>
   );

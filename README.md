@@ -71,3 +71,24 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+
+---
+
+## Admin panel & saving for all users
+
+- **Admin URL:** `/admin` — sign in with **brijeshparjapat52@gmail.com** (no password).
+- **Save button:** In the admin header, click **Save changes**. This always saves to your browser (localStorage). To have the same config for **all users** (any device, any browser), use Supabase below.
+
+### Supabase: one config for everyone
+
+1. Create a free project at [supabase.com](https://supabase.com).
+2. In the SQL Editor, run the script in **`supabase-setup.sql`** (creates `site_config` table).
+3. In your project root, create a **`.env`** file:
+   ```env
+   VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+   VITE_SUPABASE_ANON_KEY=your_anon_key_here
+   ```
+   (Find both in Supabase: Project Settings → API.)
+4. Restart dev server or rebuild: `npm run dev` / `npm run build`.
+
+After this, when you click **Save changes** in admin, config is stored in Supabase. Every visitor loads that config when they open the site, so they see the same content and theme.
