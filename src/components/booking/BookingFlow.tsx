@@ -62,6 +62,8 @@ const BookingFlow = ({
   });
   const [agreed, setAgreed] = useState(false);
   const [payMode, setPayMode] = useState<"advance" | "full">("advance");
+  // "cash" reserves the date and the studio confirms on payment in person.
+  const [payChannel, setPayChannel] = useState<"online" | "cash">("online");
   const [sentLink, setSentLink] = useState<string | null>(null);
   // null means availability could not be checked — distinct from "nothing booked".
   const [busy, setBusy] = useState<BusySlot[] | null>([]);
@@ -98,6 +100,7 @@ const BookingFlow = ({
     setDetails({ name: "", phone: "", email: "", location: "", notes: "" });
     setAgreed(false);
     setPayMode("advance");
+    setPayChannel("online");
     setSentLink(null);
     setSubmitError("");
     // Arriving from a package card means step 1 is already answered.
@@ -236,6 +239,7 @@ const BookingFlow = ({
       notes: details.notes,
       payMode,
       advancePercent: booking.advancePercent,
+      method: payChannel,
     });
 
     setSubmitting(false);
@@ -697,10 +701,57 @@ const BookingFlow = ({
                   How would you like to pay?
                 </DialogTitle>
                 <p className="mb-4 text-[0.88rem] text-muted-foreground">
-                  We&rsquo;ll send payment details on WhatsApp once your date is confirmed.
+                  Pay online to confirm instantly, or reserve now and pay in cash.
                 </p>
 
-                <div className="flex flex-col gap-2">
+                {/* Online vs cash. Online confirms via Razorpay; cash reserves
+                    the date and the studio confirms when paid in person. */}
+                {isPaymentEnabled() ? (
+                  <div className="mb-3 flex gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setPayChannel("online")}
+                      className={cn(
+                        "flex-1 rounded-full px-4 py-2 text-[0.85rem] font-medium transition-colors",
+                        payChannel === "online"
+                          ? "bg-primary text-primary-foreground"
+                          : "border border-border hover:border-foreground"
+                      )}
+                    >
+                      Pay online
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPayChannel("cash")}
+                      className={cn(
+                        "flex-1 rounded-full px-4 py-2 text-[0.85rem] font-medium transition-colors",
+                        payChannel === "cash"
+                          ? "bg-primary text-primary-foreground"
+                          : "border border-border hover:border-foreground"
+                      )}
+                    >
+                      Pay cash
+                    </button>
+                  </div>
+                ) : null}
+
+                {payChannel === "cash" ? (
+                  <div className="rounded-xl border border-border bg-muted/40 p-4 text-[0.9rem] text-[hsl(var(--ink-soft))]">
+                    <p className="font-medium text-foreground">Reserve now, pay in person</p>
+                    <p className="mt-1">
+                      We&rsquo;ll hold {date ? formatLongDate(date) : "your date"} and
+                      confirm once we&rsquo;ve received your payment. We&rsquo;ll message
+                      you on WhatsApp to arrange it.
+                    </p>
+                  </div>
+                ) : null}
+
+                <div
+                  className={cn(
+                    "flex flex-col gap-2",
+                    payChannel === "cash" && "hidden"
+                  )}
+                >
                   <button
                     type="button"
                     onClick={() => setPayMode("advance")}
@@ -769,14 +820,16 @@ const BookingFlow = ({
                   </button>
                 </div>
 
-                <p className="mt-4 flex items-start gap-2 rounded-lg bg-muted px-3.5 py-3 text-[0.84rem] text-muted-foreground">
-                  <Lock className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-                  <span>
-                    {isPaymentEnabled()
-                      ? "Payment is handled by Razorpay. We never see your card details."
-                      : "Online payment isn't live yet. Send the WhatsApp message and Brijesh will confirm your date and share payment details."}
-                  </span>
-                </p>
+                {payChannel === "online" ? (
+                  <p className="mt-4 flex items-start gap-2 rounded-lg bg-muted px-3.5 py-3 text-[0.84rem] text-muted-foreground">
+                    <Lock className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                    <span>
+                      {isPaymentEnabled()
+                        ? "Payment is handled by Razorpay. We never see your card details."
+                        : "Online payment isn't live yet. Send the WhatsApp message and Brijesh will confirm your date and share payment details."}
+                    </span>
+                  </p>
+                ) : null}
               </>
             ) : null}
 
@@ -803,7 +856,11 @@ const BookingFlow = ({
                 disabled={!canContinue || submitting}
                 onClick={() =>
                   step === 4
-                    ? void (isPaymentEnabled() ? payAndBook() : submit())
+                    ? // Cash reservations never touch Razorpay — they save and
+                      // wait for the studio to confirm payment in person.
+                      void (isPaymentEnabled() && payChannel === "online"
+                        ? payAndBook()
+                        : submit())
                     : setStep(((step as number) + 1) as Step)
                 }
                 className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-[0.92rem] font-medium text-primary-foreground transition-colors hover:bg-[hsl(var(--gold-dark))] disabled:opacity-40"
@@ -814,9 +871,11 @@ const BookingFlow = ({
                     Saving…
                   </>
                 ) : step === 4 ? (
-                  isPaymentEnabled()
-                    ? `Pay ${formatINR(payMode === "advance" ? advance : total)}`
-                    : "Send booking request"
+                  payChannel === "cash"
+                    ? "Reserve my date"
+                    : isPaymentEnabled()
+                      ? `Pay ${formatINR(payMode === "advance" ? advance : total)}`
+                      : "Send booking request"
                 ) : (
                   "Continue"
                 )}

@@ -28,6 +28,8 @@ export interface NewBooking {
   notes: string;
   payMode: "advance" | "full";
   advancePercent: number;
+  /** "cash" = pay in person; the studio confirms it by hand. */
+  method?: "online" | "cash";
 }
 
 /**
@@ -108,6 +110,7 @@ export async function createBooking(input: NewBooking): Promise<BookingResult> {
     slot_id: input.slotId,
     service_slug: input.serviceSlug,
     package_ref: input.pack.id,
+    payment_method: input.method ?? "online",
   });
 
   if (!error) return { ok: true };

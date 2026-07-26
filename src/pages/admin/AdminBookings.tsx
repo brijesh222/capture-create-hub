@@ -4,6 +4,7 @@ import { useSiteConfig } from "@/context/SiteConfigContext";
 import {
   deliverGallery,
   fetchAdminBookings,
+  markCashReceived,
   updateBookingStatus,
   STATUS_META,
   type AdminBooking,
@@ -45,10 +46,15 @@ const ACTIVE = new Set([
   "held",
 ]);
 
-type Filter = "upcoming" | "due" | "past" | "leads" | "all";
+type Filter = "upcoming" | "cash" | "due" | "past" | "leads" | "all";
 
 /** Started but never paid — a lead to follow up rather than a live booking. */
 const LEAD_STATUSES = new Set(["awaiting_payment", "held", "expired", "failed"]);
+
+/** A cash reservation waiting for the studio to confirm payment in person. */
+function isCashPending(b: AdminBooking): boolean {
+  return b.paymentMethod === "cash" && (b.status === "held" || b.status === "awaiting_payment");
+}
 
 /**
  * A booking owes money when it's a live shoot that's been paid something but
@@ -144,6 +150,10 @@ const AdminBookings = () => {
     const live = bookings.filter((b) => ACTIVE.has(b.status));
     let list: AdminBooking[];
     if (filter === "all") list = bookings;
+    else if (filter === "cash")
+      list = bookings
+        .filter(isCashPending)
+        .sort((a, b) => +new Date(a.startsAt) - +new Date(b.startsAt));
     else if (filter === "leads")
       list = bookings
         .filter((b) => LEAD_STATUSES.has(b.status))
@@ -153,8 +163,14 @@ const AdminBookings = () => {
         .filter((b) => balanceDuePaise(b) > 0)
         .sort((a, b) => +new Date(a.startsAt) - +new Date(b.startsAt));
     else if (filter === "upcoming")
+      // Only shoots still to happen — a delivered or completed job isn't
+      // "upcoming" even if its date is in the future (e.g. rescheduled early).
       list = live
-        .filter((b) => new Date(b.startsAt).getTime() >= now)
+        .filter(
+          (b) =>
+            (b.status === "confirmed" || b.status === "awaiting_payment") &&
+            new Date(b.startsAt).getTime() >= now
+        )
         .sort((a, b) => +new Date(a.startsAt) - +new Date(b.startsAt));
     else
       list = live
@@ -304,7 +320,7 @@ const AdminBookings = () => {
 
       {/* filter */}
       <div className="mb-4 flex gap-1.5">
-        {(["upcoming", "due", "leads", "past", "all"] as Filter[]).map((f) => (
+        {(["upcoming", "cash", "due", "leads", "past", "all"] as Filter[]).map((f) => (
           <button
             key={f}
             type="button"
@@ -318,9 +334,11 @@ const AdminBookings = () => {
           >
             {f === "due"
               ? "Payment due"
-              : f === "leads"
-                ? "Leads"
-                : f.charAt(0).toUpperCase() + f.slice(1)}
+              : f === "cash"
+                ? "Cash pending"
+                : f === "leads"
+                  ? "Leads"
+                  : f.charAt(0).toUpperCase() + f.slice(1)}
           </button>
         ))}
       </div>
@@ -501,14 +519,27 @@ const AdminBookings = () => {
                   Gallery
                 </h3>
                 {selected.galleryUrl ? (
-                  <a
-                    href={selected.galleryUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block truncate text-[0.88rem] text-primary underline"
-                  >
-                    {selected.galleryUrl}
-                  </a>
+                  <div className="flex flex-col gap-2">
+                    <a
+                      href={selected.galleryUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block truncate text-[0.88rem] text-primary underline"
+                    >
+                      {selected.galleryUrl}
+                    </a>
+                    <a
+                      href={`${waLink(selected.contactPhone)}?text=${encodeURIComponent(
+                        `Hi ${selected.contactName}, your photos from ${config.branding.siteName} are ready! 📸\n\nView & download here: ${selected.galleryUrl}`
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-4 py-2 text-[0.85rem] font-medium text-primary-foreground"
+                    >
+                      <MessageCircle className="h-4 w-4" aria-hidden="true" />
+                      Send gallery on WhatsApp
+                    </a>
+                  </div>
                 ) : (
                   <div className="flex gap-2">
                     <input
@@ -532,6 +563,58 @@ const AdminBookings = () => {
                     </button>
                   </div>
                 )}
+              </div>
+            ) : null}
+
+            {/* ---- cash payment confirmation ---- */}
+            {isCashPending(selected) ? (
+              <div className="mt-6 rounded-xl border border-[hsl(var(--star)/0.4)] bg-[hsl(var(--star)/0.08)] p-4">
+                <h3 className="mb-1 text-[0.8rem] font-semibold uppercase tracking-[0.08em] text-[hsl(var(--star))]">
+                  Cash reservation
+                </h3>
+                <p className="mb-3 text-[0.85rem] text-[hsl(var(--ink-soft))]">
+                  Awaiting cash. Confirm once received — this locks the date and marks it
+                  paid.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    disabled={acting}
+                    onClick={() =>
+                      doAction(
+                        () =>
+                          markCashReceived(
+                            selected.id,
+                            Math.round(
+                              (selected.totalPaise * config.booking.advancePercent) / 100
+                            ),
+                            "advance"
+                          ),
+                        "Advance recorded — booking confirmed."
+                      )
+                    }
+                    className="rounded-full border border-border bg-card px-4 py-2 text-[0.85rem] font-medium hover:border-foreground disabled:opacity-40"
+                  >
+                    Got advance (
+                    {formatINR(
+                      (selected.totalPaise * config.booking.advancePercent) / 100 / 100
+                    )}
+                    )
+                  </button>
+                  <button
+                    type="button"
+                    disabled={acting}
+                    onClick={() =>
+                      doAction(
+                        () => markCashReceived(selected.id, selected.totalPaise, "balance"),
+                        "Full payment recorded — booking confirmed."
+                      )
+                    }
+                    className="rounded-full bg-primary px-4 py-2 text-[0.85rem] font-medium text-primary-foreground disabled:opacity-40"
+                  >
+                    Got full ({formatINR(selected.totalPaise / 100)})
+                  </button>
+                </div>
               </div>
             ) : null}
 

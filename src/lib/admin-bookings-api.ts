@@ -38,6 +38,7 @@ export interface AdminBooking {
   razorpayPaymentId: string | null;
   galleryUrl: string | null;
   reviewStatus: string | null;
+  paymentMethod: "online" | "cash";
 }
 
 interface Row {
@@ -49,6 +50,7 @@ interface Row {
   package_ref: string;
   slot_id: string;
   pay_mode: "advance" | "full";
+  payment_method: "online" | "cash";
   total_paise: number;
   advance_paise: number;
   contact_name: string;
@@ -90,6 +92,7 @@ function toBooking(r: Row): AdminBooking {
     razorpayPaymentId: paid?.razorpay_payment_id ?? null,
     galleryUrl: r.galleries?.[0]?.external_url ?? r.galleries?.[0]?.storage_path ?? null,
     reviewStatus: r.reviews?.[0]?.status ?? null,
+    paymentMethod: r.payment_method ?? "online",
   };
 }
 
@@ -105,7 +108,7 @@ export async function fetchAdminBookings(): Promise<AdminBooking[]> {
   const { data, error } = await supabase
     .from("bookings")
     .select(
-      "id,status,created_at,starts_at,service_slug,package_ref,slot_id,pay_mode,total_paise,advance_paise,contact_name,contact_phone,contact_email,location_note,customer_notes,payments(status,amount_paise,razorpay_payment_id),galleries(external_url,storage_path),reviews(status)"
+      "id,status,created_at,starts_at,service_slug,package_ref,slot_id,pay_mode,payment_method,total_paise,advance_paise,contact_name,contact_phone,contact_email,location_note,customer_notes,payments(status,amount_paise,razorpay_payment_id),galleries(external_url,storage_path),reviews(status)"
     )
     .order("starts_at", { ascending: false });
 
@@ -149,6 +152,39 @@ export async function rescheduleBooking(
     .eq("id", id);
   if (!error) return { ok: true };
   return { ok: false, reason: error.code === "23P01" ? "taken" : "error" };
+}
+
+/**
+ * Record a cash payment and confirm the booking. Used when a customer paid in
+ * person — the studio marks it received by hand, mirroring what the Razorpay
+ * webhook does for online payments.
+ */
+export async function markCashReceived(
+  bookingId: string,
+  amountPaise: number,
+  kind: "advance" | "balance"
+): Promise<boolean> {
+  const supabase = getSupabase();
+  if (!supabase) return false;
+
+  const { error: pErr } = await supabase.from("payments").insert({
+    booking_id: bookingId,
+    kind,
+    amount_paise: amountPaise,
+    status: "paid",
+    method: "cash",
+  });
+  if (pErr) return false;
+
+  const { error: bErr } = await supabase
+    .from("bookings")
+    .update({
+      status: "confirmed",
+      hold_expires_at: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", bookingId);
+  return !bErr;
 }
 
 /** Attach a gallery link and mark the booking delivered. */
