@@ -2,8 +2,13 @@ import { getSupabase } from "./supabase";
 import { parsePrice } from "./booking";
 import type { PackageItem } from "@/types/site-config";
 
-/** How long a submitted booking blocks the date while the studio confirms it. */
-const PENDING_HOURS = 48;
+/**
+ * How long a submitted booking blocks the date while the studio confirms it.
+ * Kept comfortably under the policy's 48-hour ceiling: the customer's device
+ * clock may run ahead of the database, and computing exactly 48h would then
+ * land past the ceiling and the insert would be rejected.
+ */
+const PENDING_HOURS = 46;
 
 export interface BusySlot {
   day: string;
