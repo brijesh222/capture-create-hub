@@ -264,6 +264,21 @@ export interface FaqConfig {
   items: FaqItem[];
 }
 
+export interface TeamMember {
+  id: string;
+  name: string;
+  role: string;
+  photoUrl: string;
+}
+
+export interface TeamConfig {
+  enabled: boolean;
+  heading: string;
+  headingHighlight: string;
+  subheading: string;
+  members: TeamMember[];
+}
+
 export interface BookingSlot {
   id: string;
   /** Shown to the customer, e.g. "Morning · 8–11 am". */
@@ -301,7 +316,8 @@ export type HomeSectionKey =
   | "about"
   | "reviews"
   | "bookBand"
-  | "faq";
+  | "faq"
+  | "team";
 
 export interface SiteConfig {
   hero: HeroConfig;
@@ -330,6 +346,7 @@ export interface SiteConfig {
   reviews: ReviewsConfig;
   bookBand: BookBandConfig;
   faq: FaqConfig;
+  team: TeamConfig;
   booking: BookingConfig;
   sectionOrder: HomeSectionKey[];
 }

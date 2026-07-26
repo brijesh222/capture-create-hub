@@ -11,6 +11,7 @@ import AboutBlock from "@/components/site/AboutBlock";
 import ReviewsSection from "@/components/site/ReviewsSection";
 import BookBandSection from "@/components/site/BookBandSection";
 import FaqSection from "@/components/site/FaqSection";
+import TeamSection from "@/components/site/TeamSection";
 import SiteFooter from "@/components/site/SiteFooter";
 import FloatingActions from "@/components/site/FloatingActions";
 import type { HomeSectionKey } from "@/types/site-config";
@@ -47,6 +48,7 @@ const Index = () => {
     reviews: <ReviewsSection />,
     bookBand: <BookBandSection onBook={() => openBooking()} />,
     faq: <FaqSection />,
+    team: <TeamSection />,
   };
 
   return (

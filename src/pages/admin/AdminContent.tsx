@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { useSiteConfig } from "@/context/SiteConfigContext";
+import AdminServices from "./AdminServices";
 import { SectionCard, TextField, TextArea, ImageField, ListEditor } from "@/components/admin/fields";
 import type { HomeSectionKey } from "@/types/site-config";
 
@@ -14,6 +16,7 @@ const SECTION_TITLES: Record<HomeSectionKey, string> = {
   reviews: "Reviews",
   bookBand: "Booking band",
   faq: "FAQ",
+  team: "Team",
 };
 
 /**
@@ -23,6 +26,7 @@ const SECTION_TITLES: Record<HomeSectionKey, string> = {
  */
 const AdminContent = () => {
   const { config, updateConfig } = useSiteConfig();
+  const [view, setView] = useState<"home" | "services">("home");
 
   // Small helpers so each editor reads cleanly.
   const patch = <K extends keyof typeof config>(key: K, value: Partial<(typeof config)[K]>) =>
@@ -55,6 +59,27 @@ const AdminContent = () => {
         </a>
       </div>
 
+      <div className="mb-4 flex gap-1.5">
+        {(["home", "services"] as const).map((v) => (
+          <button
+            key={v}
+            type="button"
+            onClick={() => setView(v)}
+            className={
+              "rounded-full px-4 py-1.5 text-[0.85rem] font-medium transition-colors " +
+              (view === v
+                ? "bg-primary text-primary-foreground"
+                : "border border-border hover:border-foreground")
+            }
+          >
+            {v === "home" ? "Home page" : "Service pages"}
+          </button>
+        ))}
+      </div>
+
+      {view === "services" ? <AdminServices /> : null}
+
+      {view === "home" ? (
       <div className="flex flex-col gap-3">
         {/* ---------------- Header / nav ---------------- */}
         <SectionCard title="Header" subtitle="Logo, menu links, book button" defaultOpen>
@@ -292,6 +317,41 @@ const AdminContent = () => {
           />
         </SectionCard>
 
+        {/* ---------------- Team ---------------- */}
+        <SectionCard
+          title="Team"
+          subtitle="Scrolling round team photos"
+          enabled={config.team.enabled}
+          onToggle={(v) => patch("team", { enabled: v })}
+        >
+          <div className="grid grid-cols-2 gap-2">
+            <TextField label="Heading" value={config.team.heading} onChange={(v) => patch("team", { heading: v })} />
+            <TextField label="Highlight" value={config.team.headingHighlight} onChange={(v) => patch("team", { headingHighlight: v })} />
+          </div>
+          <TextArea label="Subheading" value={config.team.subheading} onChange={(v) => patch("team", { subheading: v })} />
+          <div>
+            <span className="mb-1 block text-[0.82rem] font-medium">Members</span>
+            <ListEditor
+              items={config.team.members}
+              onChange={(members) => patch("team", { members })}
+              makeNew={() => ({ id: uid(), name: "New member", role: "", photoUrl: "" })}
+              addLabel="Add member"
+              renderItem={(m, update) => (
+                <div className="flex flex-col gap-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <input className="rounded-lg border border-border bg-card px-3 py-2 text-[0.88rem] font-medium" value={m.name} placeholder="Name" onChange={(e) => update({ name: e.target.value })} />
+                    <input className="rounded-lg border border-border bg-card px-3 py-2 text-[0.88rem]" value={m.role} placeholder="Role" onChange={(e) => update({ role: e.target.value })} />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="h-12 w-12 shrink-0 rounded-full border border-border bg-muted bg-cover bg-center" style={m.photoUrl ? { backgroundImage: `url(${m.photoUrl})` } : undefined} />
+                    <input className="w-full rounded-lg border border-border bg-card px-3 py-2 text-[0.88rem]" value={m.photoUrl} placeholder="Photo URL" onChange={(e) => update({ photoUrl: e.target.value })} />
+                  </div>
+                </div>
+              )}
+            />
+          </div>
+        </SectionCard>
+
         {/* ---------------- Order + visibility ---------------- */}
         <SectionCard title="Section order" subtitle="Drag sections up or down, or hide them">
           <div className="flex flex-col gap-1.5">
@@ -307,6 +367,7 @@ const AdminContent = () => {
           </div>
         </SectionCard>
       </div>
+      ) : null}
     </div>
   );
 };

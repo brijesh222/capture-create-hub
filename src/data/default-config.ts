@@ -22,6 +22,7 @@ type HomeSections = Pick<
   | "reviews"
   | "bookBand"
   | "faq"
+  | "team"
   | "booking"
   | "sectionOrder"
 >;
@@ -222,6 +223,15 @@ export const defaultHomeSections: HomeSections = {
       },
     ],
   },
+  team: {
+    enabled: false,
+    heading: "Meet the ",
+    headingHighlight: "team",
+    subheading: "The people behind the camera.",
+    members: [
+      { id: "tm1", name: "Brijesh Prajapat", role: "Lead photographer", photoUrl: "" },
+    ],
+  },
   booking: {
     enabled: true,
     advancePercent: 10,
@@ -249,6 +259,7 @@ export const defaultHomeSections: HomeSections = {
     "packages",
     "about",
     "reviews",
+    "team",
     "bookBand",
     "faq",
   ],
@@ -523,6 +534,13 @@ export function mergeWithDefaults(partial: Partial<SiteConfig>): SiteConfig {
       ...partial.faq,
       items: partial.faq?.items?.length ? partial.faq.items : defaultHomeSections.faq.items,
     },
+    team: {
+      ...defaultHomeSections.team,
+      ...partial.team,
+      members: partial.team?.members?.length
+        ? partial.team.members
+        : defaultHomeSections.team.members,
+    },
     booking: {
       ...defaultHomeSections.booking,
       ...partial.booking,
@@ -542,8 +560,15 @@ export function mergeWithDefaults(partial: Partial<SiteConfig>): SiteConfig {
         : defaultHomeSections.booking.workingDays,
       blackoutDates: partial.booking?.blackoutDates ?? defaultHomeSections.booking.blackoutDates,
     },
+    // Keep the saved order, but append any sections added since it was saved
+    // (e.g. "team"), so new sections can actually render for existing configs.
     sectionOrder: partial.sectionOrder?.length
-      ? partial.sectionOrder
+      ? [
+          ...partial.sectionOrder,
+          ...defaultHomeSections.sectionOrder.filter(
+            (k) => !partial.sectionOrder!.includes(k)
+          ),
+        ]
       : defaultHomeSections.sectionOrder,
   };
 }
