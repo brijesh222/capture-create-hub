@@ -196,6 +196,48 @@ const AdminContent = () => {
           />
         </SectionCard>
 
+        {/* ---------------- Recent work ---------------- */}
+        <SectionCard
+          title="Recent work"
+          subtitle="The home page photo grid"
+          enabled={config.work.enabled}
+          onToggle={(v) => patch("work", { enabled: v })}
+        >
+          <div className="grid grid-cols-2 gap-2">
+            <TextField label="Heading" value={config.work.heading} onChange={(v) => patch("work", { heading: v })} />
+            <TextField label="Highlight" value={config.work.headingHighlight} onChange={(v) => patch("work", { headingHighlight: v })} />
+          </div>
+          <TextArea label="Subheading" value={config.work.subheading} onChange={(v) => patch("work", { subheading: v })} />
+          <div>
+            <span className="mb-1 block text-[0.82rem] font-medium">Photos</span>
+            <p className="mb-2 text-[0.75rem] text-muted-foreground">
+              Leave empty to auto-show your service cover photos.
+            </p>
+            <ListEditor
+              items={config.work.photos}
+              onChange={(photos) => patch("work", { photos })}
+              makeNew={() => ({ id: uid(), url: "", size: "normal" as const, caption: "" })}
+              addLabel="Add photo"
+              renderItem={(ph, u) => (
+                <div className="flex items-center gap-3">
+                  <div className="h-12 w-12 shrink-0 rounded-lg border border-border bg-muted bg-cover bg-center" style={ph.url ? { backgroundImage: `url(${ph.url})` } : undefined} />
+                  <div className="flex flex-1 flex-col gap-1.5">
+                    <input className="rounded-lg border border-border bg-card px-3 py-2 text-[0.88rem]" value={ph.url} placeholder="Photo URL (or upload below)" onChange={(e) => u({ url: e.target.value })} />
+                    <div className="flex gap-2">
+                      <input className="flex-1 rounded-lg border border-border bg-card px-3 py-1.5 text-[0.82rem]" value={ph.caption ?? ""} placeholder="Caption" onChange={(e) => u({ caption: e.target.value })} />
+                      <select className="rounded-lg border border-border bg-card px-2 py-1.5 text-[0.82rem]" value={ph.size} onChange={(e) => u({ size: e.target.value as "normal" | "tall" })}>
+                        <option value="normal">Normal</option>
+                        <option value="tall">Tall</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
+            />
+          </div>
+          <TextField label="Button text" value={config.work.ctaText} onChange={(v) => patch("work", { ctaText: v })} />
+        </SectionCard>
+
         {/* ---------------- Packages ---------------- */}
         <SectionCard
           title="Packages"
@@ -297,6 +339,28 @@ const AdminContent = () => {
             <TextField label="Highlight" value={config.bookBand.headingHighlight} onChange={(v) => patch("bookBand", { headingHighlight: v })} />
           </div>
           <TextArea label="Body" value={config.bookBand.body} onChange={(v) => patch("bookBand", { body: v })} />
+          <div className="grid grid-cols-2 gap-2">
+            <TextField label="Main button" value={config.bookBand.primaryText} onChange={(v) => patch("bookBand", { primaryText: v })} />
+            <TextField label="WhatsApp button" value={config.bookBand.whatsappText} onChange={(v) => patch("bookBand", { whatsappText: v })} />
+          </div>
+        </SectionCard>
+
+        {/* ---------------- Reviews ---------------- */}
+        <SectionCard
+          title="Reviews"
+          subtitle="Heading — approve reviews in the Reviews tab"
+          enabled={config.reviews.enabled}
+          onToggle={(v) => patch("reviews", { enabled: v })}
+        >
+          <div className="grid grid-cols-2 gap-2">
+            <TextField label="Heading" value={config.reviews.heading} onChange={(v) => patch("reviews", { heading: v })} />
+            <TextField label="Highlight" value={config.reviews.headingHighlight} onChange={(v) => patch("reviews", { headingHighlight: v })} />
+          </div>
+          <p className="rounded-lg bg-muted px-3 py-2.5 text-[0.8rem] text-muted-foreground">
+            Customer reviews are approved in the{" "}
+            <strong className="font-medium text-foreground">Reviews</strong> tab. Approved
+            ones show here automatically.
+          </p>
         </SectionCard>
 
         {/* ---------------- FAQ ---------------- */}
