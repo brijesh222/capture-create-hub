@@ -1,16 +1,17 @@
 import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { getSession, onAuthChange, signOut } from "@/lib/admin-auth";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import { LayoutDashboard, LogOut, Save } from "lucide-react";
+import { LogOut, Save } from "lucide-react";
 import { useSiteConfig } from "@/context/SiteConfigContext";
+import { cn } from "@/lib/utils";
 import { saveConfigToCloud, isCloudConfigEnabled } from "@/lib/config-api";
 import { toast } from "sonner";
 
 const AdminLayout = () => {
   const navigate = useNavigate();
+  const onSettings = useLocation().pathname.startsWith("/admin/settings");
   const { config } = useSiteConfig();
   const [saving, setSaving] = useState(false);
 
@@ -63,28 +64,50 @@ const AdminLayout = () => {
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur">
-        <div className="flex h-14 items-center justify-between px-4">
-          <Link to="/admin" className="flex items-center gap-2 font-display font-semibold text-foreground">
-            <LayoutDashboard className="h-5 w-5" />
-            Admin
-          </Link>
-          <div className="flex items-center gap-2">
-            <span className="text-xs hidden sm:inline" title={isCloudConfigEnabled() ? "Supabase connected – saves go to cloud" : "Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to .env and restart dev server"}>
-              {isCloudConfigEnabled() ? (
-                <span className="text-green-600 dark:text-green-400">Cloud: connected</span>
-              ) : (
-                <span className="text-muted-foreground">Cloud: not connected</span>
-              )}
-            </span>
-            <Button
-              size="sm"
-              onClick={handleSave}
-              disabled={saving}
-              className="bg-primary text-primary-foreground"
+        <div className="flex h-14 items-center justify-between gap-3 px-4">
+          <nav className="flex items-center gap-1">
+            <NavLink
+              to="/admin"
+              end
+              className={({ isActive }) =>
+                cn(
+                  "rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
+                  isActive
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                )
+              }
             >
-              <Save className="h-4 w-4 mr-1" />
-              {saving ? "Saving…" : "Save changes"}
-            </Button>
+              Bookings
+            </NavLink>
+            <NavLink
+              to="/admin/settings"
+              className={({ isActive }) =>
+                cn(
+                  "rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
+                  isActive
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                )
+              }
+            >
+              Site content
+            </NavLink>
+          </nav>
+          <div className="flex items-center gap-2">
+            {/* Save only publishes site content; it does nothing on the
+                bookings list, so it appears only on the settings page. */}
+            {onSettings ? (
+              <Button
+                size="sm"
+                onClick={handleSave}
+                disabled={saving}
+                className="bg-primary text-primary-foreground"
+              >
+                <Save className="h-4 w-4 mr-1" />
+                {saving ? "Saving…" : "Save changes"}
+              </Button>
+            ) : null}
             <a href="/" target="_blank" rel="noopener noreferrer">
               <Button variant="outline" size="sm">View site</Button>
             </a>
