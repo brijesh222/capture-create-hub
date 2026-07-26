@@ -150,25 +150,39 @@ Deno.serve(async (req) => {
   }
 
   // ---- ask Razorpay for an order ----
-  const auth = btoa(`${keyId}:${keySecret}`);
-  const rzpResponse = await fetch("https://api.razorpay.com/v1/orders", {
-    method: "POST",
-    headers: {
-      Authorization: `Basic ${auth}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      amount: amountPaise,
-      currency: "INR",
-      receipt: booking.id,
-      notes: { booking_id: booking.id, package: pack.name },
-    }),
-  });
+  // Trim in case a secret was pasted with stray whitespace/newline, which would
+  // corrupt the auth header. Time out rather than hang if Razorpay stalls.
+  const auth = btoa(`${keyId.trim()}:${keySecret.trim()}`);
+  let rzpResponse: Response;
+  try {
+    rzpResponse = await fetch("https://api.razorpay.com/v1/orders", {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${auth}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        amount: amountPaise,
+        currency: "INR",
+        receipt: booking.id.slice(0, 40),
+        notes: { booking_id: booking.id, package: pack.name },
+      }),
+      signal: AbortSignal.timeout(8000),
+    });
+  } catch (e) {
+    await supabase.from("bookings").update({ status: "failed" }).eq("id", booking.id);
+    return json(
+      { error: "Couldn't reach Razorpay.", detail: e instanceof Error ? e.message : String(e) },
+      502
+    );
+  }
 
   if (!rzpResponse.ok) {
+    const detail = await rzpResponse.text();
     // Free the slot again rather than leaving it blocked by a dead booking.
     await supabase.from("bookings").update({ status: "failed" }).eq("id", booking.id);
-    return json({ error: "Couldn't start the payment. Please try again." }, 502);
+    // Surface Razorpay's actual error so key/activation problems are diagnosable.
+    return json({ error: "Razorpay rejected the order.", status: rzpResponse.status, detail }, 502);
   }
 
   const order = await rzpResponse.json();
