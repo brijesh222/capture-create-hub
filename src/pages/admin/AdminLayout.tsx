@@ -11,7 +11,9 @@ import { toast } from "sonner";
 
 const AdminLayout = () => {
   const navigate = useNavigate();
-  const onSettings = useLocation().pathname.startsWith("/admin/settings");
+  const path = useLocation().pathname;
+  // Save publishes site config, which the Content and Site-content pages edit.
+  const showSave = path.startsWith("/admin/content") || path.startsWith("/admin/settings");
   const { config } = useSiteConfig();
   const [saving, setSaving] = useState(false);
 
@@ -81,6 +83,19 @@ const AdminLayout = () => {
               Bookings
             </NavLink>
             <NavLink
+              to="/admin/content"
+              className={({ isActive }) =>
+                cn(
+                  "rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
+                  isActive
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                )
+              }
+            >
+              Content
+            </NavLink>
+            <NavLink
               to="/admin/reviews"
               className={({ isActive }) =>
                 cn(
@@ -104,13 +119,13 @@ const AdminLayout = () => {
                 )
               }
             >
-              Site content
+              Settings
             </NavLink>
           </nav>
           <div className="flex items-center gap-2">
             {/* Save only publishes site content; it does nothing on the
                 bookings list, so it appears only on the settings page. */}
-            {onSettings ? (
+            {showSave ? (
               <Button
                 size="sm"
                 onClick={handleSave}
