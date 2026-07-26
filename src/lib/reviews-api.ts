@@ -28,6 +28,47 @@ export async function fetchApprovedReviews(): Promise<PublicReview[]> {
   }));
 }
 
+export interface AdminReview {
+  id: string;
+  name: string;
+  meta: string;
+  rating: number;
+  text: string;
+  status: "pending" | "approved" | "hidden";
+  createdAt: string;
+}
+
+/** Every review, for moderation. Admin-only via RLS. */
+export async function fetchAllReviews(): Promise<AdminReview[]> {
+  const supabase = getSupabase();
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from("reviews")
+    .select("id,reviewer_name,meta,rating,body,status,created_at")
+    .order("created_at", { ascending: false });
+  if (error || !data) return [];
+  return data.map((r) => ({
+    id: r.id,
+    name: r.reviewer_name,
+    meta: r.meta,
+    rating: r.rating,
+    text: r.body,
+    status: r.status,
+    createdAt: r.created_at,
+  }));
+}
+
+/** Approve / hide / re-queue a review. */
+export async function setReviewStatus(
+  id: string,
+  status: "pending" | "approved" | "hidden"
+): Promise<boolean> {
+  const supabase = getSupabase();
+  if (!supabase) return false;
+  const { error } = await supabase.from("reviews").update({ status }).eq("id", id);
+  return !error;
+}
+
 /**
  * Submit a review for a booking. Always lands as 'pending' — the admin
  * approves before it can appear on the site. One review per booking (unique
