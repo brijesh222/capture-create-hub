@@ -1,185 +1,341 @@
-import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { ArrowLeft, MessageCircle } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import { ArrowLeft, ArrowRight, Check, Star } from "lucide-react";
 import { useSiteConfig } from "@/context/SiteConfigContext";
-import { getSectionStyle, getWhatsAppLink } from "@/lib/site-config-utils";
-import BookingFormDialog from "@/components/BookingFormDialog";
-
-import catWedding from "@/assets/cat-wedding.jpg";
-import catPreWedding from "@/assets/cat-pre-wedding.jpg";
-import catBirthday from "@/assets/cat-birthday.jpg";
-import catMaternity from "@/assets/cat-maternity.jpg";
-import catBusiness from "@/assets/cat-business.jpg";
-import catHotel from "@/assets/cat-hotel.jpg";
-import catProduct from "@/assets/cat-product.jpg";
-import catFood from "@/assets/cat-food.jpg";
-
-const defaultCategoryImages: Record<string, string> = {
-  wedding: catWedding,
-  "pre-wedding": catPreWedding,
-  birthday: catBirthday,
-  maternity: catMaternity,
-  "business-promo": catBusiness,
-  "hotel-resort-interior": catHotel,
-  product: catProduct,
-  food: catFood,
-};
-
-function getCategoryThumbnail(thumbnailUrl: string, slug: string): string {
-  return (
-    thumbnailUrl?.trim() ||
-    defaultCategoryImages[slug] ||
-    Object.values(defaultCategoryImages)[0] ||
-    ""
-  );
-}
+import { getWhatsAppLink } from "@/lib/site-config-utils";
+import { getCategoryThumbnail } from "@/lib/category-images";
+import BookingFlow, { type BookingStart } from "@/components/booking/BookingFlow";
+import SiteHeader from "@/components/site/SiteHeader";
+import SiteFooter from "@/components/site/SiteFooter";
+import FloatingActions from "@/components/site/FloatingActions";
+import ServicePackages from "@/components/site/ServicePackages";
+import PhotoGrid, { type GridPhoto } from "@/components/site/PhotoGrid";
+import { SectionHeading, WhatsAppDot } from "@/components/site/parts";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 const CategoryPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const { config } = useSiteConfig();
   const [bookingOpen, setBookingOpen] = useState(false);
-  const category = config.categories.find((c) => c.slug === slug);
-  const headerStyle = getSectionStyle(config, "category-header");
-  const galleryStyle = getSectionStyle(config, "gallery");
-  const whatsappLink = getWhatsAppLink(config);
-  const hero = config.hero;
+  const [start, setStart] = useState<BookingStart>({});
 
-  if (!category) {
+  const openBooking = (packageId?: string) => {
+    setStart({ serviceSlug: slug, packageId });
+    setBookingOpen(true);
+  };
+
+  const service = config.categories.find((c) => c.slug === slug);
+
+  useEffect(() => {
+    if (!service) return;
+    document.title =
+      service.seoTitle || `${service.name} Photography | ${config.branding.siteName}`;
+    const meta = document.querySelector('meta[name="description"]');
+    if (meta) {
+      meta.setAttribute(
+        "content",
+        service.seoDescription || service.intro || service.description
+      );
+    }
+  }, [service, config.branding.siteName]);
+
+  // Gallery prefers uploaded media, then the cover photo, so the page is never bare.
+  const gallery: GridPhoto[] = useMemo(() => {
+    if (!service) return [];
+    if (service.media?.length) {
+      return service.media.map((m) => ({ id: m.id, url: m.url, caption: m.caption }));
+    }
+    return [
+      {
+        id: `${service.slug}-cover`,
+        url: getCategoryThumbnail(service.thumbnailUrl, service.slug),
+      },
+    ];
+  }, [service]);
+
+  const reviews = useMemo(
+    () => config.reviews.items.filter((r) => r.serviceSlug === service?.slug),
+    [config.reviews.items, service?.slug]
+  );
+
+  const others = config.categories
+    .filter((c) => c.visible !== false && c.slug !== slug)
+    .slice(0, 4);
+
+  if (!service) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background px-6">
-        <div className="text-center">
-          <h1 className="mb-4 font-display text-3xl text-foreground">
-            Category Not Found
-          </h1>
-          <Link to="/" className="font-body text-primary hover:underline">
-            ← Back to Home
+      <div className="min-h-screen bg-background">
+        <SiteHeader onBook={() => openBooking()} />
+        <div className="shell flex flex-col items-start gap-4 py-24">
+          <h1 className="heading-lg">Service not found</h1>
+          <p className="text-[hsl(var(--ink-soft))]">
+            That page may have been renamed or removed.
+          </p>
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-[0.92rem] font-medium text-primary-foreground"
+          >
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            Back to home
           </Link>
         </div>
+        <SiteFooter />
       </div>
     );
   }
 
-  const headerImage = getCategoryThumbnail(category.thumbnailUrl, category.slug);
-  const hasMedia = category.media?.length > 0;
-  const galleryItems = hasMedia
-    ? category.media
-    : Array.from({ length: 6 }, (_, i) => ({
-        id: `placeholder-${i}`,
-        type: "photo" as const,
-        url: headerImage,
-      }));
+  const cover =
+    service.coverImageUrl || getCategoryThumbnail(service.thumbnailUrl, service.slug);
+  const faqItems = service.faqItems?.length ? service.faqItems : config.faq.items;
 
   return (
-    <div className="min-h-screen bg-background pb-20 md:pb-0">
-      <div
-        className="relative h-[40vh] overflow-hidden"
-        style={headerStyle}
-      >
-        <img
-          src={headerImage}
-          alt={category.name}
-          className="h-full w-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-dark-overlay" />
-        <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+    <div className="min-h-screen bg-background">
+      <SiteHeader onBook={() => openBooking()} />
+
+      <main>
+        {/* ---------- hero ---------- */}
+        <section className="shell py-8 md:py-12">
+          <Link
+            to="/"
+            className="mb-6 inline-flex items-center gap-1.5 text-[0.85rem] text-muted-foreground transition-colors hover:text-primary"
           >
-            <span className="mb-2 block text-4xl">{category.icon}</span>
-            <h1 className="mb-2 font-display text-3xl font-bold text-foreground md:text-5xl">
-              {category.name}
-            </h1>
-            <p className="font-body text-muted-foreground">
-              {category.description}
-            </p>
-          </motion.div>
-        </div>
-      </div>
+            <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+            All services
+          </Link>
 
-      <div className="mx-auto max-w-6xl px-6 py-6">
-        <Link
-          to="/"
-          className="inline-flex items-center gap-2 font-body text-sm text-muted-foreground transition-colors hover:text-primary"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Home
-        </Link>
-      </div>
+          <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-14">
+            <div>
+              <div className="eyebrow">{service.startingPrice || "Photography"}</div>
+              <h1 className="heading-xl mt-3">
+                {service.name} <strong>photography</strong>
+              </h1>
+              <p className="mt-4 max-w-[28rem] text-[1.03rem] text-[hsl(var(--ink-soft))]">
+                {service.intro || service.description}
+              </p>
 
-      <div className="mx-auto max-w-6xl px-6" style={galleryStyle}>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {galleryItems.map((item, idx) => (
-            <motion.div
-              key={item.id || idx}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: idx * 0.1 }}
-              className="overflow-hidden rounded-xl shadow-elevated"
-            >
-              {item.type === "video" ? (
-                <div className="relative aspect-video w-full bg-muted">
-                  {item.url ? (
-                    <video
-                      src={item.url}
-                      controls
-                      className="h-64 w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-64 items-center justify-center text-muted-foreground">
-                      Video URL not set
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <img
-                  src={item.url || headerImage}
-                  alt={`${category.name} ${idx + 1}`}
-                  className="h-64 w-full object-cover transition-transform duration-500 hover:scale-105"
-                />
-              )}
-            </motion.div>
-          ))}
-        </div>
+              <div className="mt-6 flex flex-wrap gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => openBooking()}
+                  className="inline-flex items-center rounded-full bg-primary px-6 py-3 text-[0.92rem] font-medium text-primary-foreground transition-colors hover:bg-[hsl(var(--gold-dark))]"
+                >
+                  Check available dates
+                </button>
+                <a
+                  href={getWhatsAppLink(config)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-3 text-[0.92rem] font-medium transition-colors hover:border-[hsl(var(--whatsapp))]"
+                >
+                  <WhatsAppDot />
+                  Ask a question
+                </a>
+              </div>
 
-        {!hasMedia && (
-          <div className="mt-12 text-center">
-            <p className="font-body text-muted-foreground">
-              More photos coming soon! Contact us to see the full portfolio.
-            </p>
+              {service.reassurance?.length ? (
+                <ul className="mt-6 flex flex-col gap-1.5 text-[0.85rem] text-muted-foreground">
+                  {service.reassurance.map((r) => (
+                    <li key={r} className="flex items-start gap-1.5">
+                      <Check
+                        className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary"
+                        aria-hidden="true"
+                      />
+                      {r}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+
+            <div
+              className="aspect-[4/3] rounded-[20px] bg-muted bg-cover bg-center lg:aspect-[4/5]"
+              style={{ backgroundImage: `url(${cover})` }}
+              role="img"
+              aria-label={`${service.name} photography`}
+            />
           </div>
-        )}
+        </section>
 
-        {/* Book Now + WhatsApp CTA at end of photos */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="mt-16 flex flex-col items-center justify-center gap-4 pb-12 sm:flex-row"
-        >
-          <button
-            type="button"
-            onClick={() => setBookingOpen(true)}
-            className="w-full rounded-lg bg-gradient-gold px-8 py-4 font-body text-sm font-semibold uppercase tracking-wider text-primary-foreground shadow-gold transition-all hover:opacity-90 sm:w-auto"
-          >
-            {hero.ctaBookText}
-          </button>
-          <a
-            href={whatsappLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex w-full items-center justify-center gap-2 rounded-lg border border-primary/30 px-8 py-4 font-body text-sm font-semibold uppercase tracking-wider text-primary transition-all hover:bg-primary/10 sm:w-auto"
-          >
-            <MessageCircle className="h-4 w-4" />
-            {hero.ctaWhatsAppText}
-          </a>
-        </motion.div>
-      </div>
+        {/* ---------- what's included ---------- */}
+        {service.included?.length ? (
+          <section className="shell py-12 md:py-14">
+            <div className="rounded-[20px] bg-primary px-6 py-10 text-primary-foreground md:px-10 md:py-12">
+              <h2 className="heading-lg mb-7">
+                What's <strong>included</strong>
+              </h2>
+              <ul className="grid gap-4 md:grid-cols-2 md:gap-x-10">
+                {service.included.map((item) => (
+                  <li key={item} className="flex items-start gap-2.5 text-[0.95rem]">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </section>
+        ) : null}
 
-      <BookingFormDialog open={bookingOpen} onOpenChange={setBookingOpen} />
+        {/* ---------- gallery ---------- */}
+        <section id="work" className="shell py-12 md:py-14">
+          <SectionHeading
+            heading="Recent "
+            highlight={`${service.name.toLowerCase()} work`}
+            subheading={
+              service.media?.length
+                ? "A selection from recent shoots."
+                : "More from this service coming soon."
+            }
+          />
+          {gallery.length === 1 ? (
+            /* A single photo in a masonry gallery reads as a broken layout, so
+               one image gets shown wide instead. */
+            <img
+              src={gallery[0].url}
+              alt={`${service.name} photography`}
+              className="w-full rounded-[20px] bg-muted object-cover"
+            />
+          ) : (
+            <PhotoGrid
+              photos={gallery}
+              alt={`${service.name} photograph`}
+              initialCount={12}
+              step={12}
+            />
+          )}
+        </section>
+
+        {/* ---------- packages ---------- */}
+        <ServicePackages
+          serviceSlug={service.slug}
+          serviceName={service.name}
+          onBook={openBooking}
+        />
+
+        {/* ---------- review ---------- */}
+        {reviews.length ? (
+          <section className="shell py-12 md:py-14">
+            <figure className="mx-auto flex max-w-[42rem] flex-col items-center gap-4 text-center">
+              <div
+                className="flex gap-0.5"
+                role="img"
+                aria-label={`${reviews[0].rating} out of 5 stars`}
+              >
+                {Array.from({ length: 5 }, (_, i) => (
+                  <Star
+                    key={i}
+                    className="h-4 w-4"
+                    aria-hidden="true"
+                    fill={i < reviews[0].rating ? "hsl(var(--star))" : "none"}
+                    stroke="hsl(var(--star))"
+                  />
+                ))}
+              </div>
+              <blockquote className="text-[1.15rem] font-light leading-relaxed">
+                &ldquo;{reviews[0].text}&rdquo;
+              </blockquote>
+              <figcaption className="text-[0.85rem] text-muted-foreground">
+                {reviews[0].name} · {reviews[0].meta}
+              </figcaption>
+            </figure>
+          </section>
+        ) : null}
+
+        {/* ---------- faq ---------- */}
+        {faqItems.length ? (
+          <section className="shell py-12 md:py-14">
+            <SectionHeading
+              heading="Questions about "
+              highlight={service.name.toLowerCase()}
+            />
+            <Accordion type="single" collapsible defaultValue={faqItems[0]?.id}>
+              {faqItems.map((item) => (
+                <AccordionItem key={item.id} value={item.id} className="border-border">
+                  <AccordionTrigger className="py-4 text-left text-base font-medium hover:no-underline">
+                    {item.question}
+                  </AccordionTrigger>
+                  <AccordionContent className="max-w-[44rem] text-[0.94rem] text-[hsl(var(--ink-soft))]">
+                    {item.answer}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </section>
+        ) : null}
+
+        {/* ---------- book ---------- */}
+        <section id="book" className="shell py-12 md:py-14">
+          <div className="flex flex-col items-center gap-4 rounded-[20px] border border-border bg-card px-6 py-11 text-center md:px-8 md:py-14">
+            <div className="eyebrow">Available now</div>
+            <h2 className="heading-lg max-w-[26rem] text-[clamp(1.7rem,3.6vw,2.4rem)]">
+              Ready to book your <strong>{service.name.toLowerCase()} shoot</strong>?
+            </h2>
+            <p className="max-w-[30rem] text-[0.97rem] text-[hsl(var(--ink-soft))]">
+              Check which dates are free and book in about two minutes. Not sure yet?
+              Message us and we&rsquo;ll talk it through.
+            </p>
+            <div className="mt-1 flex flex-wrap justify-center gap-2.5">
+              <button
+                type="button"
+                onClick={() => openBooking()}
+                className="inline-flex items-center rounded-full bg-primary px-6 py-3 text-[0.92rem] font-medium text-primary-foreground transition-colors hover:bg-[hsl(var(--gold-dark))]"
+              >
+                Check available dates
+              </button>
+              <a
+                href={getWhatsAppLink(config)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-full border border-border px-6 py-3 text-[0.92rem] font-medium transition-colors hover:border-[hsl(var(--whatsapp))]"
+              >
+                <WhatsAppDot />
+                WhatsApp us
+              </a>
+            </div>
+          </div>
+        </section>
+
+        {/* ---------- other services ---------- */}
+        {others.length ? (
+          <section className="shell py-12 md:py-14">
+            <SectionHeading heading="Also " highlight="shooting" />
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-5">
+              {others.map((other) => (
+                <Link
+                  key={other.id}
+                  to={`/category/${other.slug}`}
+                  className="group flex flex-col gap-3"
+                >
+                  <div
+                    className="aspect-[3/4] rounded-[14px] bg-muted bg-cover bg-center transition-transform duration-300 group-hover:scale-[1.015]"
+                    style={{
+                      backgroundImage: `url(${getCategoryThumbnail(
+                        other.thumbnailUrl,
+                        other.slug
+                      )})`,
+                    }}
+                  />
+                  <span className="flex items-center gap-1.5 text-base font-semibold">
+                    {other.name}
+                    <ArrowRight
+                      className="h-4 w-4 text-primary transition-transform group-hover:translate-x-0.5"
+                      aria-hidden="true"
+                    />
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        ) : null}
+      </main>
+
+      <SiteFooter />
+      <FloatingActions onBook={() => openBooking()} />
+      <BookingFlow open={bookingOpen} onOpenChange={setBookingOpen} start={start} />
     </div>
   );
 };

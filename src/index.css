@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,56 +6,54 @@
 
 @layer base {
   :root {
-    --background: 25 15% 6%;
-    --foreground: 38 35% 90%;
+    /* Direction B — "Studio": paper ground, deep green accent */
+    --background: 36 18% 95%;
+    --foreground: 252 11% 9%;
 
-    --card: 25 14% 10%;
-    --card-foreground: 38 35% 90%;
+    --card: 0 0% 100%;
+    --card-foreground: 252 11% 9%;
 
-    --popover: 25 14% 10%;
-    --popover-foreground: 38 35% 90%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 252 11% 9%;
 
-    --primary: 38 90% 50%;
-    --primary-foreground: 25 20% 6%;
+    --primary: 162 40% 23%;
+    --primary-foreground: 36 18% 97%;
 
-    --secondary: 25 12% 14%;
-    --secondary-foreground: 38 30% 85%;
+    --secondary: 140 16% 93%;
+    --secondary-foreground: 162 40% 23%;
 
-    --muted: 25 10% 18%;
-    --muted-foreground: 30 12% 50%;
+    --muted: 36 14% 91%;
+    --muted-foreground: 265 4% 55%;
 
-    --accent: 38 75% 42%;
-    --accent-foreground: 38 35% 92%;
+    --accent: 140 16% 93%;
+    --accent-foreground: 162 40% 23%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 72% 48%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 38 18% 18%;
-    --input: 25 14% 16%;
-    --ring: 38 90% 50%;
+    --border: 36 16% 87%;
+    --input: 36 16% 87%;
+    --ring: 162 40% 23%;
 
-    --radius: 0.5rem;
+    --radius: 0.875rem;
 
-    --sidebar-background: 25 15% 8%;
-    --sidebar-foreground: 38 30% 85%;
-    --sidebar-primary: 38 90% 50%;
-    --sidebar-primary-foreground: 25 20% 6%;
-    --sidebar-accent: 25 12% 14%;
-    --sidebar-accent-foreground: 38 30% 85%;
-    --sidebar-border: 38 18% 18%;
-    --sidebar-ring: 38 90% 50%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 252 11% 9%;
+    --sidebar-primary: 162 40% 23%;
+    --sidebar-primary-foreground: 36 18% 97%;
+    --sidebar-accent: 140 16% 93%;
+    --sidebar-accent-foreground: 162 40% 23%;
+    --sidebar-border: 36 16% 87%;
+    --sidebar-ring: 162 40% 23%;
 
-    /* Custom tokens */
-    --gold: 38 90% 50%;
-    --gold-light: 38 85% 65%;
-    --gold-dark: 38 80% 35%;
-    --warm-cream: 38 35% 90%;
-    --deep-charcoal: 25 15% 6%;
-    --elevated: 25 14% 10%;
-    --gradient-gold: linear-gradient(135deg, hsl(38 90% 50%), hsl(38 85% 65%));
-    --gradient-dark: linear-gradient(180deg, hsl(25 15% 6%), hsl(25 14% 10%));
-    --shadow-gold: 0 4px 30px -8px hsl(38 90% 50% / 0.25);
-    --shadow-elevated: 0 8px 40px -12px hsl(0 0% 0% / 0.5);
+    /* Custom tokens. `gold` is kept as an alias so the older admin theme
+       presets that write to it still resolve to something sane. */
+    --gold: 162 40% 23%;
+    --gold-light: 162 32% 34%;
+    --gold-dark: 162 45% 17%;
+    --ink-soft: 252 6% 34%;
+    --whatsapp: 142 70% 49%;
+    --star: 38 63% 46%;
   }
 }
 
@@ -66,37 +64,43 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Inter', system-ui, sans-serif;
     font-weight: 400;
+    -webkit-font-smoothing: antialiased;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Inter', system-ui, sans-serif;
+    letter-spacing: -0.028em;
+    text-wrap: balance;
   }
 }
 
 @layer utilities {
-  .text-gradient-gold {
-    background: linear-gradient(135deg, hsl(38 90% 50%), hsl(38 85% 65%));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+  /* Section headings pair a light weight with one bold span. */
+  .heading-lg {
+    font-size: clamp(1.6rem, 3.4vw, 2.15rem);
+    font-weight: 300;
+    line-height: 1.15;
+  }
+  .heading-xl {
+    font-size: clamp(2.15rem, 5.6vw, 3.5rem);
+    font-weight: 300;
+    line-height: 1.04;
+    letter-spacing: -0.035em;
+  }
+  .heading-lg strong,
+  .heading-xl strong {
+    font-weight: 650;
   }
 
-  .bg-gradient-gold {
-    background: linear-gradient(135deg, hsl(38 90% 50%), hsl(38 85% 65%));
+  .eyebrow {
+    @apply text-xs font-semibold uppercase text-primary;
+    letter-spacing: 0.16em;
   }
 
-  .bg-gradient-dark-overlay {
-    background: linear-gradient(180deg, hsl(25 15% 6% / 0.3) 0%, hsl(25 15% 6% / 0.7) 50%, hsl(25 15% 6% / 0.95) 100%);
-  }
-
-  .shadow-gold {
-    box-shadow: 0 4px 30px -8px hsl(38 90% 50% / 0.25);
-  }
-
-  .shadow-elevated {
-    box-shadow: 0 8px 40px -12px hsl(0 0% 0% / 0.5);
+  .shell {
+    @apply mx-auto w-full max-w-[78rem] px-5;
   }
 
   .scrollbar-hide {
@@ -106,4 +110,125 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Invoice
+ *
+ * Hidden on screen, revealed only to the printer. "Download invoice" opens the
+ * browser's print dialog, where "Save as PDF" produces the file — no PDF
+ * library, and the layout stays editable as ordinary CSS.
+ * ------------------------------------------------------------------------- */
+
+.invoice-sheet {
+  position: absolute;
+  left: -10000px;
+  top: 0;
+  width: 210mm;
+  min-height: 297mm;
+  background: #fff;
+  color: #14181c;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 11pt;
+  line-height: 1.5;
+}
+
+.invoice-sheet .inv-head {
+  background: #1a6079;
+  color: #fff;
+  padding: 18mm 14mm 10mm;
+}
+.invoice-sheet .inv-head h1 {
+  font-size: 34pt;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-align: center;
+  line-height: 1;
+}
+.invoice-sheet .inv-sub {
+  text-align: center;
+  font-size: 12pt;
+  opacity: 0.85;
+  margin-top: 2mm;
+}
+.invoice-sheet .inv-rule {
+  border-top: 1.5px solid rgba(255, 255, 255, 0.7);
+  margin: 5mm 0 4mm;
+}
+.invoice-sheet .inv-head-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 10mm;
+}
+.invoice-sheet address {
+  font-style: normal;
+  font-size: 10.5pt;
+  line-height: 1.45;
+}
+.invoice-sheet .inv-date { text-align: right; font-size: 10.5pt; white-space: nowrap; }
+
+.invoice-sheet section { padding: 8mm 14mm 0; }
+.invoice-sheet h2 {
+  font-size: 11pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 3mm;
+}
+.invoice-sheet h3 {
+  font-size: 13pt;
+  font-weight: 700;
+  margin-bottom: 4mm;
+}
+.invoice-sheet .inv-centre { text-align: center; }
+.invoice-sheet .inv-right { text-align: right; }
+.invoice-sheet .inv-muted { color: #6b7280; font-size: 10pt; }
+
+.invoice-sheet .inv-two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10mm;
+}
+.invoice-sheet .inv-shoot { padding: 4mm 0 6mm; }
+
+.invoice-sheet .inv-divider {
+  border-top: 1.5px solid #1a6079;
+  margin: 6mm 14mm 0;
+}
+
+.invoice-sheet .inv-bottom { align-items: start; padding-top: 8mm; }
+.invoice-sheet .inv-bottom ul { list-style: none; }
+.invoice-sheet .inv-bottom li { padding: 0.6mm 0; }
+
+.invoice-sheet .inv-totals { text-align: right; font-weight: 700; }
+.invoice-sheet .inv-totals p { padding: 0.8mm 0; }
+
+.invoice-sheet .inv-sign {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14mm;
+  padding: 18mm 14mm 12mm;
+  font-size: 10pt;
+}
+.invoice-sheet .inv-sign-line {
+  border-top: 1.5px solid #1a6079;
+  margin-bottom: 2mm;
+}
+
+@media print {
+  /* Hide the app, show only the invoice. */
+  body > #root { display: none !important; }
+  .invoice-sheet {
+    position: static !important;
+    left: auto !important;
+  }
+  @page { size: A4; margin: 0; }
 }

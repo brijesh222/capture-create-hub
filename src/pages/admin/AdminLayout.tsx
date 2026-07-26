@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
+import type { Session } from "@supabase/supabase-js";
 import { Outlet, useNavigate } from "react-router-dom";
-import { isAdminAuthenticated } from "@/lib/admin-auth";
+import { getSession, onAuthChange, signOut } from "@/lib/admin-auth";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { LayoutDashboard, LogOut, Save } from "lucide-react";
-import { clearAdminSession } from "@/lib/admin-auth";
 import { useSiteConfig } from "@/context/SiteConfigContext";
 import { saveConfigToCloud, isCloudConfigEnabled } from "@/lib/config-api";
 import { toast } from "sonner";
@@ -14,14 +14,31 @@ const AdminLayout = () => {
   const { config } = useSiteConfig();
   const [saving, setSaving] = useState(false);
 
+  const [session, setSession] = useState<Session | null>(null);
+  const [checking, setChecking] = useState(true);
+
   useEffect(() => {
-    if (!isAdminAuthenticated()) {
-      navigate("/admin/login", { replace: true });
-    }
+    let active = true;
+    getSession().then((s) => {
+      if (!active) return;
+      setSession(s);
+      setChecking(false);
+      if (!s) navigate("/admin/login", { replace: true });
+    });
+    // Signing out in another tab, or a refresh token expiring, must kick the
+    // admin out here too rather than leaving a dead panel open.
+    const unsubscribe = onAuthChange((s) => {
+      setSession(s);
+      if (!s) navigate("/admin/login", { replace: true });
+    });
+    return () => {
+      active = false;
+      unsubscribe();
+    };
   }, [navigate]);
 
-  const handleLogout = () => {
-    clearAdminSession();
+  const handleLogout = async () => {
+    await signOut();
     navigate("/admin/login", { replace: true });
   };
 
@@ -33,9 +50,15 @@ const AdminLayout = () => {
     else toast.error(message);
   };
 
-  if (!isAdminAuthenticated()) {
-    return null;
+  if (checking) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <p className="text-sm text-muted-foreground">Checking your session…</p>
+      </div>
+    );
   }
+
+  if (!session) return null;
 
   return (
     <div className="min-h-screen bg-background">

@@ -1,0 +1,10 @@
+{
+  "//": "Marks supabase/functions as Deno code, not part of the Vite app. Edge Functions run on Deno, so `Deno.env`, top-level `Deno.serve` and https:// imports are valid here even though the app's TypeScript config knows nothing about them.",
+  "compilerOptions": {
+    "lib": ["deno.window", "dom"],
+    "strict": true
+  },
+  "imports": {
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2"
+  }
+}
