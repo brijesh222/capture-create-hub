@@ -81,6 +81,23 @@ const AdminBookings = () => {
 
   const reload = () => fetchAdminBookings().then(setBookings);
 
+  /**
+   * Deliver the gallery AND open WhatsApp to send the link in one tap.
+   * window.open is called synchronously (before any await) so the browser
+   * doesn't treat it as a blocked popup.
+   */
+  const deliverAndSend = (b: AdminBooking, url: string) => {
+    const link = url.trim();
+    if (!link) return;
+    const msg = `Hi ${b.contactName}, your photos from ${config.branding.siteName} are ready! 📸\n\nView & download here: ${link}`;
+    window.open(
+      `${waLink(b.contactPhone)}?text=${encodeURIComponent(msg)}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
+    void doAction(() => deliverGallery(b.id, link), "Gallery delivered and sent.");
+  };
+
   /** Runs an admin action, then refreshes and closes the drawer. */
   const doAction = async (fn: () => Promise<boolean>, okMsg: string) => {
     setActing(true);
@@ -551,15 +568,10 @@ const AdminBookings = () => {
                     <button
                       type="button"
                       disabled={acting || !galleryUrl.trim()}
-                      onClick={() =>
-                        doAction(
-                          () => deliverGallery(selected.id, galleryUrl.trim()),
-                          "Gallery delivered."
-                        )
-                      }
+                      onClick={() => deliverAndSend(selected, galleryUrl)}
                       className="rounded-full bg-primary px-4 py-2 text-[0.85rem] font-medium text-primary-foreground disabled:opacity-40"
                     >
-                      Deliver
+                      Deliver &amp; send
                     </button>
                   </div>
                 )}
