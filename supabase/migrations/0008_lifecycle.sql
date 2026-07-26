@@ -43,7 +43,8 @@ create policy "galleries admin all"
 -- the bookings table (which would leak customer contact details).
 alter table public.reviews
   add column if not exists reviewer_name text not null default '',
-  add column if not exists meta          text not null default '';
+  add column if not exists meta          text not null default '',
+  add column if not exists instagram     text not null default '';
 
 drop policy if exists "reviews public submit" on public.reviews;
 create policy "reviews public submit"
