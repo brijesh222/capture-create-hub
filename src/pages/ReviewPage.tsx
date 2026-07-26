@@ -20,6 +20,7 @@ const ReviewPage = () => {
 
   const [name, setName] = useState(params.get("n") ?? "");
   const meta = params.get("s") ?? "";
+  const [instagram, setInstagram] = useState("");
   const [rating, setRating] = useState(5);
   const [hover, setHover] = useState(0);
   const [text, setText] = useState("");
@@ -35,7 +36,15 @@ const ReviewPage = () => {
     }
     setBusy(true);
     setError("");
-    const res = await submitReview({ bookingId, name: name.trim(), meta, rating, text: text.trim() });
+    const res = await submitReview({
+      bookingId,
+      name: name.trim(),
+      meta,
+      // Store a bare handle without the @ so the display can add it consistently.
+      instagram: instagram.trim().replace(/^@/, ""),
+      rating,
+      text: text.trim(),
+    });
     setBusy(false);
     if (res.ok) setDone(true);
     else setError(res.message);
@@ -101,6 +110,19 @@ const ReviewPage = () => {
                   id="rv-name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-[0.9rem] outline-none focus:border-foreground"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="rv-insta" className="text-[0.85rem] font-medium">
+                  Instagram <span className="font-normal text-muted-foreground">(optional)</span>
+                </label>
+                <input
+                  id="rv-insta"
+                  value={instagram}
+                  onChange={(e) => setInstagram(e.target.value)}
+                  placeholder="@yourhandle"
                   className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-[0.9rem] outline-none focus:border-foreground"
                 />
               </div>

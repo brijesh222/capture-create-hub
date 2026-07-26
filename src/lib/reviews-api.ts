@@ -3,6 +3,7 @@ import { getSupabase } from "./supabase";
 export interface PublicReview {
   name: string;
   meta: string;
+  instagram: string;
   rating: number;
   text: string;
 }
@@ -16,13 +17,14 @@ export async function fetchApprovedReviews(): Promise<PublicReview[]> {
   if (!supabase) return [];
   const { data, error } = await supabase
     .from("reviews")
-    .select("reviewer_name,meta,rating,body")
+    .select("reviewer_name,meta,instagram,rating,body")
     .eq("status", "approved")
     .order("created_at", { ascending: false });
   if (error || !data) return [];
   return data.map((r) => ({
     name: r.reviewer_name,
     meta: r.meta,
+    instagram: r.instagram,
     rating: r.rating,
     text: r.body,
   }));
@@ -32,6 +34,7 @@ export interface AdminReview {
   id: string;
   name: string;
   meta: string;
+  instagram: string;
   rating: number;
   text: string;
   status: "pending" | "approved" | "hidden";
@@ -44,13 +47,14 @@ export async function fetchAllReviews(): Promise<AdminReview[]> {
   if (!supabase) return [];
   const { data, error } = await supabase
     .from("reviews")
-    .select("id,reviewer_name,meta,rating,body,status,created_at")
+    .select("id,reviewer_name,meta,instagram,rating,body,status,created_at")
     .order("created_at", { ascending: false });
   if (error || !data) return [];
   return data.map((r) => ({
     id: r.id,
     name: r.reviewer_name,
     meta: r.meta,
+    instagram: r.instagram,
     rating: r.rating,
     text: r.body,
     status: r.status,
@@ -78,6 +82,7 @@ export async function submitReview(input: {
   bookingId: string;
   name: string;
   meta: string;
+  instagram: string;
   rating: number;
   text: string;
 }): Promise<{ ok: true } | { ok: false; message: string }> {
@@ -88,6 +93,7 @@ export async function submitReview(input: {
     booking_id: input.bookingId,
     reviewer_name: input.name,
     meta: input.meta,
+    instagram: input.instagram,
     rating: input.rating,
     body: input.text,
     status: "pending",

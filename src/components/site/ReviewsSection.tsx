@@ -73,7 +73,18 @@ const ReviewsSection = () => {
               </span>
               <span>
                 <span className="block text-[0.87rem] font-semibold">{r.name}</span>
-                <span className="block text-[0.76rem] text-muted-foreground">{r.meta}</span>
+                {(r as { instagram?: string }).instagram ? (
+                  <a
+                    href={`https://instagram.com/${(r as { instagram?: string }).instagram}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block text-[0.76rem] text-primary hover:underline"
+                  >
+                    @{(r as { instagram?: string }).instagram}
+                  </a>
+                ) : (
+                  <span className="block text-[0.76rem] text-muted-foreground">{r.meta}</span>
+                )}
               </span>
             </figcaption>
           </figure>
