@@ -1,5 +1,7 @@
+import { useEffect, useState } from "react";
 import { Star } from "lucide-react";
 import { useSiteConfig } from "@/context/SiteConfigContext";
+import { fetchApprovedReviews, type PublicReview } from "@/lib/reviews-api";
 import { SectionHeading } from "./parts";
 
 function initials(name: string): string {
@@ -14,15 +16,30 @@ function initials(name: string): string {
 const ReviewsSection = () => {
   const { config } = useSiteConfig();
   const { reviews } = config;
+  const [approved, setApproved] = useState<PublicReview[]>([]);
 
-  if (!reviews.enabled || !reviews.items.length) return null;
+  // Real approved reviews from the database take priority; the config's manual
+  // reviews are the fallback for a studio that hasn't collected any yet.
+  useEffect(() => {
+    let active = true;
+    fetchApprovedReviews().then((r) => active && setApproved(r));
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const items = approved.length
+    ? approved.map((r, i) => ({ id: `db-${i}`, ...r }))
+    : reviews.items;
+
+  if (!reviews.enabled || !items.length) return null;
 
   return (
     <section className="shell py-12 md:py-14">
       <SectionHeading heading={reviews.heading} highlight={reviews.headingHighlight} />
 
       <div className="grid gap-4 md:grid-cols-3">
-        {reviews.items.map((r) => (
+        {items.map((r) => (
           <figure
             key={r.id}
             className="flex flex-col gap-3 rounded-[14px] border border-border bg-card p-5"
