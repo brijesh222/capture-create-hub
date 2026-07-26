@@ -9,10 +9,10 @@ import CategoryPage from "./pages/CategoryPage";
 import NotFound from "./pages/NotFound";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminLayout from "./pages/admin/AdminLayout";
-import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminBookings from "./pages/admin/AdminBookings";
 import AdminReviews from "./pages/admin/AdminReviews";
 import AdminContent from "./pages/admin/AdminContent";
+import AdminSettings from "./pages/admin/AdminSettings";
 import ReviewPage from "./pages/ReviewPage";
 
 const queryClient = new QueryClient();
@@ -33,7 +33,7 @@ const App = () => (
               <Route index element={<AdminBookings />} />
               <Route path="reviews" element={<AdminReviews />} />
               <Route path="content" element={<AdminContent />} />
-              <Route path="settings" element={<AdminDashboard />} />
+              <Route path="settings" element={<AdminSettings />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
