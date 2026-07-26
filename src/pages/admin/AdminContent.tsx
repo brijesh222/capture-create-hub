@@ -208,6 +208,12 @@ const AdminContent = () => {
             <TextField label="Highlight" value={config.packages.headingHighlight} onChange={(v) => patch("packages", { headingHighlight: v })} />
           </div>
           <TextArea label="Subheading" value={config.packages.subheading} onChange={(v) => patch("packages", { subheading: v })} />
+          <p className="rounded-lg bg-muted px-3 py-2.5 text-[0.8rem] text-muted-foreground">
+            The packages themselves are edited per service under{" "}
+            <strong className="font-medium text-foreground">Service pages</strong>. This
+            section shows them on the home page.
+          </p>
+          {false ? (
           <ListEditor
             items={config.packages.items}
             onChange={(items) => patch("packages", { items })}
@@ -237,6 +243,7 @@ const AdminContent = () => {
               </div>
             )}
           />
+          ) : null}
         </SectionCard>
 
         {/* ---------------- About ---------------- */}

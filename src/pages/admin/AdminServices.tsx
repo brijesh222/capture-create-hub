@@ -20,6 +20,16 @@ const AdminServices = () => {
   const update = (id: string, p: Partial<CategoryConfig>) =>
     updateConfig("categories", services.map((c) => (c.id === id ? { ...c, ...p } : c)));
 
+  // Packages belong to a service. They live in config.packages.items tagged by
+  // serviceSlug; here we edit just the ones for one service, leaving the rest.
+  const svcPackages = (slug: string) =>
+    config.packages.items.filter((p) => p.serviceSlug === slug);
+  const setSvcPackages = (slug: string, next: typeof config.packages.items) =>
+    updateConfig("packages", {
+      ...config.packages,
+      items: [...config.packages.items.filter((p) => p.serviceSlug !== slug), ...next],
+    });
+
   const addService = () => {
     const name = "New service";
     updateConfig("categories", [
@@ -112,6 +122,46 @@ const AdminServices = () => {
                 <input className="w-full rounded-lg border border-border bg-card px-3 py-2 text-[0.88rem]" value={row.text} onChange={(e) => u({ text: e.target.value })} />
               )}
             />
+          </div>
+
+          <div>
+            <span className="mb-1 block text-[0.82rem] font-medium">Packages</span>
+            <ListEditor
+              items={svcPackages(svc.slug)}
+              onChange={(next) => setSvcPackages(svc.slug, next)}
+              makeNew={() => ({
+                id: uid(),
+                name: "New package",
+                price: "₹0",
+                priceNote: "",
+                features: [],
+                featured: false,
+                tag: "",
+                ctaText: "Check dates",
+                serviceSlug: svc.slug,
+              })}
+              addLabel="Add package"
+              renderItem={(pk, u) => (
+                <div className="flex flex-col gap-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <input className="rounded-lg border border-border bg-card px-3 py-2 text-[0.88rem] font-medium" value={pk.name} placeholder="Name" onChange={(e) => u({ name: e.target.value })} />
+                    <input className="rounded-lg border border-border bg-card px-3 py-2 text-[0.88rem]" value={pk.price} placeholder="₹15,000" onChange={(e) => u({ price: e.target.value })} />
+                  </div>
+                  <input className="rounded-lg border border-border bg-card px-3 py-2 text-[0.88rem]" value={pk.priceNote} placeholder="2 hours · indoor" onChange={(e) => u({ priceNote: e.target.value })} />
+                  <input className="rounded-lg border border-border bg-card px-3 py-2 text-[0.88rem]" value={pk.features.join(", ")} placeholder="Features, comma separated" onChange={(e) => u({ features: e.target.value.split(",").map((f) => f.trim()).filter(Boolean) })} />
+                  <div className="grid grid-cols-2 gap-2">
+                    <input className="rounded-lg border border-border bg-card px-3 py-2 text-[0.88rem]" value={pk.tag} placeholder='Tag e.g. "Most booked"' onChange={(e) => u({ tag: e.target.value })} />
+                    <label className="flex items-center gap-2 text-[0.82rem]">
+                      <input type="checkbox" checked={pk.featured} onChange={(e) => u({ featured: e.target.checked })} />
+                      Highlight
+                    </label>
+                  </div>
+                </div>
+              )}
+            />
+            <p className="mt-1 text-[0.75rem] text-muted-foreground">
+              These are what customers pick when booking this service.
+            </p>
           </div>
 
           <div>
