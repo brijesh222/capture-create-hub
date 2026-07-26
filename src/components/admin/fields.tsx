@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { ChevronDown, GripVertical, Plus, Trash2 } from "lucide-react";
+import { useRef, useState } from "react";
+import { ChevronDown, GripVertical, Loader2, Plus, Trash2, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { normalizeImageUrl, uploadImage } from "@/lib/storage";
 
 /**
  * A small, consistent kit of form controls for the admin content editors.
@@ -64,7 +65,11 @@ export function TextArea({
   );
 }
 
-/** Image by URL, with a small preview. Upload comes later; URLs work today. */
+/**
+ * Image field with two ways in: upload a file (stored in Supabase, reliable),
+ * or paste a link (Google Drive share links are auto-converted to a usable
+ * form). Upload is the recommended path.
+ */
 export function ImageField({
   label,
   value,
@@ -76,6 +81,20 @@ export function ImageField({
   onChange: (v: string) => void;
   hint?: string;
 }) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleFile = async (file: File | undefined) => {
+    if (!file) return;
+    setUploading(true);
+    setError("");
+    const res = await uploadImage(file);
+    setUploading(false);
+    if (res.ok && res.url) onChange(res.url);
+    else setError(res.message ?? "Upload failed.");
+  };
+
   return (
     <div>
       <span className="mb-1 block text-[0.82rem] font-medium">{label}</span>
@@ -84,12 +103,47 @@ export function ImageField({
           className="h-14 w-14 shrink-0 rounded-lg border border-border bg-muted bg-cover bg-center"
           style={value ? { backgroundImage: `url(${value})` } : undefined}
         />
-        <input
-          className={inputCls}
-          value={value}
-          placeholder="https://…"
-          onChange={(e) => onChange(e.target.value)}
-        />
+        <div className="flex flex-1 flex-col gap-1.5">
+          <input
+            className={inputCls}
+            value={value}
+            placeholder="Paste a link, or upload →"
+            onChange={(e) => onChange(e.target.value)}
+            onBlur={(e) => onChange(normalizeImageUrl(e.target.value))}
+          />
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              disabled={uploading}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-[0.78rem] font-medium transition-colors hover:border-foreground disabled:opacity-50"
+            >
+              {uploading ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+              ) : (
+                <Upload className="h-3.5 w-3.5" aria-hidden="true" />
+              )}
+              {uploading ? "Uploading…" : "Upload"}
+            </button>
+            {value ? (
+              <button
+                type="button"
+                onClick={() => onChange("")}
+                className="text-[0.78rem] text-muted-foreground hover:text-destructive"
+              >
+                Remove
+              </button>
+            ) : null}
+          </div>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => handleFile(e.target.files?.[0])}
+          />
+          {error ? <span className="text-[0.75rem] text-destructive">{error}</span> : null}
+        </div>
       </div>
       {hint ? <span className="mt-1 block text-[0.75rem] text-muted-foreground">{hint}</span> : null}
     </div>
