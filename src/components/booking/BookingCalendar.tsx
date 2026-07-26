@@ -1,19 +1,34 @@
 import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useSiteConfig } from "@/context/SiteConfigContext";
-import { buildMonth, MONTH_NAMES, startOfDay } from "@/lib/booking";
+import { buildMonth, MONTH_NAMES, startOfDay, toISODate } from "@/lib/booking";
 import { cn } from "@/lib/utils";
 
 const DOW = ["S", "M", "T", "W", "T", "F", "S"];
 
+/**
+ * Calendar supporting single-date and range selection.
+ *
+ * Single mode: one click sets `selected`.
+ * Range mode: first click sets the start, second sets the end; a third starts
+ * over. Any unavailable day inside a would-be range blocks that range, so a
+ * multi-day booking can't straddle a taken date.
+ */
 const BookingCalendar = ({
+  mode = "single",
   selected,
+  rangeStart,
+  rangeEnd,
   onSelect,
+  onRangeSelect,
   fullDays,
 }: {
-  selected: string;
-  onSelect: (iso: string) => void;
-  /** Days with no slots left, from real bookings. */
+  mode?: "single" | "range";
+  selected?: string;
+  rangeStart?: string;
+  rangeEnd?: string;
+  onSelect?: (iso: string) => void;
+  onRangeSelect?: (start: string, end: string) => void;
   fullDays?: Set<string>;
 }) => {
   const { config } = useSiteConfig();
@@ -22,8 +37,6 @@ const BookingCalendar = ({
 
   const cells = useMemo(() => {
     const built = buildMonth(view.y, view.m, config.booking);
-    // A day with every slot booked is unavailable even though the working-hours
-    // rules say otherwise.
     return built.map((c) =>
       c.available && fullDays?.has(c.iso)
         ? { ...c, available: false, reason: "booked" as const }
@@ -31,16 +44,37 @@ const BookingCalendar = ({
     );
   }, [view, config.booking, fullDays]);
 
-  // Never let the customer page back into months that are entirely in the past.
-  const atFirstMonth =
-    view.y === today.getFullYear() && view.m === today.getMonth();
-
-  const shift = (delta: number) => {
+  const atFirstMonth = view.y === today.getFullYear() && view.m === today.getMonth();
+  const shift = (delta: number) =>
     setView((v) => {
       const d = new Date(v.y, v.m + delta, 1);
       return { y: d.getFullYear(), m: d.getMonth() };
     });
+
+  const handleClick = (iso: string) => {
+    if (mode === "single") {
+      onSelect?.(iso);
+      return;
+    }
+    // Range: no start yet, or restarting after a full range → set start.
+    if (!rangeStart || (rangeStart && rangeEnd)) {
+      onRangeSelect?.(iso, "");
+      return;
+    }
+    // Second click before start → swap so order is always ascending.
+    const [a, b] = iso < rangeStart ? [iso, rangeStart] : [rangeStart, iso];
+    onRangeSelect?.(a, b);
   };
+
+  const inRange = (iso: string) =>
+    mode === "range" &&
+    rangeStart &&
+    rangeEnd &&
+    iso >= rangeStart &&
+    iso <= rangeEnd;
+
+  const isEndpoint = (iso: string) =>
+    iso === selected || iso === rangeStart || iso === rangeEnd;
 
   return (
     <div className="rounded-xl border border-border p-4">
@@ -82,20 +116,22 @@ const BookingCalendar = ({
               key={cell.iso}
               type="button"
               disabled={!cell.available}
-              onClick={() => onSelect(cell.iso)}
+              onClick={() => handleClick(cell.iso)}
               aria-label={`${cell.date.getDate()} ${MONTH_NAMES[view.m]}${
                 cell.available ? "" : " — unavailable"
               }`}
-              aria-pressed={selected === cell.iso}
+              aria-pressed={isEndpoint(cell.iso)}
               className={cn(
                 "flex aspect-square items-center justify-center rounded-lg text-[0.82rem] tabular-nums transition-colors",
-                selected === cell.iso
+                isEndpoint(cell.iso)
                   ? "bg-primary font-semibold text-primary-foreground"
-                  : cell.available
-                    ? "border border-border bg-card hover:border-primary"
-                    : cell.reason === "booked"
-                      ? "text-muted-foreground/60 line-through"
-                      : "text-muted-foreground/40"
+                  : inRange(cell.iso)
+                    ? "bg-secondary text-secondary-foreground"
+                    : cell.available
+                      ? "border border-border bg-card hover:border-primary"
+                      : cell.reason === "booked"
+                        ? "text-muted-foreground/60 line-through"
+                        : "text-muted-foreground/40"
               )}
             >
               {cell.date.getDate()}
@@ -123,3 +159,17 @@ const BookingCalendar = ({
 };
 
 export default BookingCalendar;
+
+/** Every date string from start to end inclusive. */
+export function datesBetween(startIso: string, endIso: string): string[] {
+  const out: string[] = [];
+  const [sy, sm, sd] = startIso.split("-").map(Number);
+  const [ey, em, ed] = endIso.split("-").map(Number);
+  const cur = new Date(sy, sm - 1, sd);
+  const end = new Date(ey, em - 1, ed);
+  while (cur <= end) {
+    out.push(toISODate(cur));
+    cur.setDate(cur.getDate() + 1);
+  }
+  return out;
+}

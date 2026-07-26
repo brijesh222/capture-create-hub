@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { CalendarClock, Download, Loader2, MessageCircle, Phone, Search, X } from "lucide-react";
+import { CalendarClock, Download, Loader2, MessageCircle, Phone, Plus, Search, X } from "lucide-react";
 import { useSiteConfig } from "@/context/SiteConfigContext";
 import {
   deliverGallery,
@@ -11,6 +11,7 @@ import {
 } from "@/lib/admin-bookings-api";
 import { toast } from "sonner";
 import { formatINR, formatLongDate } from "@/lib/booking";
+import AdminBookingForm from "./AdminBookingForm";
 import InvoicePortal from "@/components/booking/InvoicePortal";
 import type { InvoiceData } from "@/components/booking/Invoice";
 import { cn } from "@/lib/utils";
@@ -73,6 +74,7 @@ const AdminBookings = () => {
   const [filter, setFilter] = useState<Filter>("upcoming");
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<AdminBooking | null>(null);
+  const [creating, setCreating] = useState(false);
   const [acting, setActing] = useState(false);
   const [galleryUrl, setGalleryUrl] = useState("");
 
@@ -283,7 +285,17 @@ const AdminBookings = () => {
 
   return (
     <div className="mx-auto max-w-4xl">
-      <h1 className="mb-1 text-2xl font-light tracking-[-0.028em]">Bookings</h1>
+      <div className="mb-1 flex items-center justify-between gap-3">
+        <h1 className="text-2xl font-light tracking-[-0.028em]">Bookings</h1>
+        <button
+          type="button"
+          onClick={() => setCreating(true)}
+          className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-[0.85rem] font-medium text-primary-foreground transition-colors hover:bg-[hsl(var(--gold-dark))]"
+        >
+          <Plus className="h-4 w-4" aria-hidden="true" />
+          New booking
+        </button>
+      </div>
       <p className="mb-6 text-sm text-muted-foreground">
         Everyone who has booked or started a booking.
       </p>
@@ -412,6 +424,13 @@ const AdminBookings = () => {
       )}
 
       {/* detail drawer */}
+      {creating ? (
+        <AdminBookingForm
+          onClose={() => setCreating(false)}
+          onCreated={() => void reload()}
+        />
+      ) : null}
+
       {selected ? (
         <div
           className="fixed inset-0 z-50 flex justify-end bg-black/40"

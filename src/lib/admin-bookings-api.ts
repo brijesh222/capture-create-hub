@@ -116,6 +116,95 @@ export async function fetchAdminBookings(): Promise<AdminBooking[]> {
   return (data as Row[]).map(toBooking);
 }
 
+export interface NewAdminBooking {
+  name: string;
+  phone: string;
+  email: string;
+  location: string;
+  notes: string;
+  serviceSlug: string;
+  serviceName: string;
+  packageRef: string;
+  totalPaise: number;
+  advancePercent: number;
+  /** Single-day: startDay only. Range: startDay..endDay inclusive. */
+  startDay: string;
+  endDay: string;
+  slotId: string;
+  slotStart: string;
+  slotEnd: string;
+  status: string;
+  /** How much cash has already been taken, if any. */
+  cashKind: "none" | "advance" | "full";
+}
+
+/**
+ * Create a booking by hand — for walk-ins, phone bookings, and offline weddings
+ * the studio wants tracked alongside online ones. Only an admin can call this
+ * (RLS), and admins may set any status, unlike the public path.
+ */
+export async function createAdminBooking(
+  b: NewAdminBooking
+): Promise<{ ok: true } | { ok: false; reason: "taken" | "error"; message: string }> {
+  const supabase = getSupabase();
+  if (!supabase) return { ok: false, reason: "error", message: "Not connected." };
+
+  const multiDay = b.endDay && b.endDay !== b.startDay;
+  // A multi-day booking occupies whole days; a single-day one occupies its slot.
+  const startsAt = new Date(
+    `${b.startDay}T${multiDay ? "08:00" : b.slotStart}:00+05:30`
+  );
+  const endsAt = new Date(
+    `${multiDay ? b.endDay : b.startDay}T${multiDay ? "19:00" : b.slotEnd}:00+05:30`
+  );
+
+  const { data: booking, error } = await supabase
+    .from("bookings")
+    .insert({
+      starts_at: startsAt.toISOString(),
+      ends_at: endsAt.toISOString(),
+      status: b.status,
+      total_paise: b.totalPaise,
+      advance_paise: Math.round((b.totalPaise * b.advancePercent) / 100),
+      pay_mode: b.cashKind === "full" ? "full" : "advance",
+      payment_method: "cash",
+      contact_name: b.name,
+      contact_phone: b.phone,
+      contact_email: b.email || null,
+      location_note: b.location,
+      customer_notes: b.notes,
+      slot_id: multiDay ? "fullday" : b.slotId,
+      service_slug: b.serviceSlug,
+      package_ref: b.packageRef,
+    })
+    .select("id")
+    .single();
+
+  if (error) {
+    if (error.code === "23P01") {
+      return { ok: false, reason: "taken", message: "Those dates overlap an existing booking." };
+    }
+    return { ok: false, reason: "error", message: error.message };
+  }
+
+  // Record any cash already taken.
+  if (b.cashKind !== "none" && booking) {
+    const amount =
+      b.cashKind === "full"
+        ? b.totalPaise
+        : Math.round((b.totalPaise * b.advancePercent) / 100);
+    await supabase.from("payments").insert({
+      booking_id: booking.id,
+      kind: b.cashKind === "full" ? "balance" : "advance",
+      amount_paise: amount,
+      status: "paid",
+      method: "cash",
+    });
+  }
+
+  return { ok: true };
+}
+
 /** Move a booking to a new status. RLS lets only an admin do this. */
 export async function updateBookingStatus(
   id: string,
