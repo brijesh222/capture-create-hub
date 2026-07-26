@@ -34,6 +34,8 @@ export interface PaymentRequest {
   serviceSlug: string;
   packageRef: string;
   day: string;
+  /** Set for a multi-day booking; last day inclusive. */
+  endDay?: string;
   slotId: string;
   payMode: "advance" | "full";
   name: string;

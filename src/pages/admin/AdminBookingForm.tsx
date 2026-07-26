@@ -3,7 +3,7 @@ import { X } from "lucide-react";
 import { toast } from "sonner";
 import { useSiteConfig } from "@/context/SiteConfigContext";
 import { createAdminBooking } from "@/lib/admin-bookings-api";
-import { parsePrice, formatLongDate } from "@/lib/booking";
+import { parsePrice, formatLongDate, formatINR } from "@/lib/booking";
 import BookingCalendar from "@/components/booking/BookingCalendar";
 import { cn } from "@/lib/utils";
 
@@ -32,6 +32,8 @@ const AdminBookingForm = ({
   const [form, setForm] = useState({ name: "", phone: "", email: "", location: "", notes: "" });
   const [status, setStatus] = useState("confirmed");
   const [cashKind, setCashKind] = useState<"none" | "advance" | "full">("advance");
+  // Optional override for custom-quoted jobs; blank = use the package price.
+  const [customAmount, setCustomAmount] = useState("");
   const [busy, setBusy] = useState(false);
 
   const packagesForService = useMemo(
@@ -45,6 +47,11 @@ const AdminBookingForm = ({
   const canSave =
     form.name.trim() && form.phone.trim() && packageRef && dateOk && !busy;
 
+  // Custom amount wins over the package price when the admin has typed one.
+  const customPaise = parsePrice(customAmount) * 100;
+  const totalPaise = customPaise > 0 ? customPaise : pack ? parsePrice(pack.price) * 100 : 0;
+  const advancePreview = Math.round((totalPaise * config.booking.advancePercent) / 100);
+
   const save = async () => {
     if (!pack) return;
     setBusy(true);
@@ -57,7 +64,7 @@ const AdminBookingForm = ({
       serviceSlug,
       serviceName: services.find((s) => s.slug === serviceSlug)?.name ?? "",
       packageRef,
-      totalPaise: parsePrice(pack.price) * 100,
+      totalPaise,
       advancePercent: config.booking.advancePercent,
       startDay: dateMode === "single" ? day : rangeStart,
       endDay: dateMode === "single" ? day : rangeEnd,
@@ -231,6 +238,28 @@ const AdminBookingForm = ({
                   </button>
                 ))}
               </div>
+            ) : null}
+          </div>
+
+          <div>
+            <label className={label}>
+              Custom amount{" "}
+              <span className="font-normal text-muted-foreground">
+                (optional — overrides package price)
+              </span>
+            </label>
+            <input
+              className={field}
+              inputMode="numeric"
+              placeholder={pack ? `Package: ${pack.price}` : "e.g. 60000"}
+              value={customAmount}
+              onChange={(e) => setCustomAmount(e.target.value)}
+            />
+            {totalPaise > 0 ? (
+              <p className="mt-1 text-[0.78rem] text-muted-foreground">
+                Total {formatINR(totalPaise / 100)} · advance{" "}
+                {formatINR(advancePreview / 100)} ({config.booking.advancePercent}%)
+              </p>
             ) : null}
           </div>
 

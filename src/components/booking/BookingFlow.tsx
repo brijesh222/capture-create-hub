@@ -52,6 +52,9 @@ const BookingFlow = ({
   const [serviceSlug, setServiceSlug] = useState("");
   const [packageId, setPackageId] = useState("");
   const [date, setDate] = useState("");
+  const [dateMode, setDateMode] = useState<"single" | "range">("single");
+  const [rangeStart, setRangeStart] = useState("");
+  const [rangeEnd, setRangeEnd] = useState("");
   const [slotId, setSlotId] = useState("");
   const [details, setDetails] = useState({
     name: "",
@@ -88,6 +91,23 @@ const BookingFlow = ({
   const balance = balanceAmount(pack, booking.advancePercent);
   const slot = booking.slots.find((s) => s.id === slotId);
 
+  // Single-day uses one date + a slot; range uses start..end as full days.
+  const bookingDay = dateMode === "single" ? date : rangeStart;
+  const bookingEndDay = dateMode === "single" ? "" : rangeEnd;
+  const dateChosen =
+    dateMode === "single" ? Boolean(date && slotId) : Boolean(rangeStart && rangeEnd);
+
+  // Human-readable date/time used across the summary, message and receipt.
+  const dateDisplay =
+    dateMode === "range"
+      ? rangeStart && rangeEnd
+        ? `${formatLongDate(rangeStart)} → ${formatLongDate(rangeEnd)}`
+        : ""
+      : date
+        ? formatLongDate(date)
+        : "";
+  const timeDisplay = dateMode === "range" ? "Full days" : slot?.label ?? "";
+
   /* Reset whenever the dialog opens, honouring whatever the customer clicked. */
   useEffect(() => {
     if (!open) return;
@@ -96,6 +116,9 @@ const BookingFlow = ({
     setServiceSlug(slug);
     setPackageId(pid);
     setDate("");
+    setDateMode("single");
+    setRangeStart("");
+    setRangeEnd("");
     setSlotId("");
     setDetails({ name: "", phone: "", email: "", location: "", notes: "" });
     setAgreed(false);
@@ -185,7 +208,8 @@ const BookingFlow = ({
     const outcome = await startPayment({
       serviceSlug,
       packageRef: pack.id,
-      day: date,
+      day: bookingDay,
+      endDay: bookingEndDay,
       slotId,
       payMode,
       name: details.name,
@@ -194,7 +218,7 @@ const BookingFlow = ({
       location: details.location,
       notes: details.notes,
       brandName: config.branding.siteName,
-      description: `${pack.name} · ${slot?.label ?? ""}`,
+      description: `${pack.name} · ${timeDisplay}`,
     });
 
     setSubmitting(false);
@@ -227,9 +251,10 @@ const BookingFlow = ({
       serviceSlug,
       serviceName: services.find((s) => s.slug === serviceSlug)?.name ?? "",
       pack,
-      day: date,
-      slotId,
-      slotLabel: slot?.label ?? "",
+      day: bookingDay,
+      endDay: bookingEndDay,
+      slotId: dateMode === "range" ? "fullday" : slotId,
+      slotLabel: dateMode === "range" ? "Full days" : slot?.label ?? "",
       slotStart: slot?.start ?? "08:00",
       slotEnd: slot?.end ?? "19:00",
       name: details.name,
@@ -266,8 +291,8 @@ const BookingFlow = ({
       "",
       `Service: ${services.find((s) => s.slug === serviceSlug)?.name ?? "—"}`,
       `Package: ${pack ? `${pack.name} (${pack.price})` : "—"}`,
-      `Date: ${date ? formatLongDate(date) : "—"}`,
-      `Time: ${slot?.label ?? "—"}`,
+      `Date: ${dateDisplay || "—"}`,
+      `Time: ${timeDisplay || "—"}`,
       "",
       `Name: ${details.name}`,
       `Phone: ${details.phone}`,
@@ -293,7 +318,7 @@ const BookingFlow = ({
       ? Boolean(packageId)
       : step === 2
         // Never let someone pick a date when we don't know what's actually free.
-        ? Boolean(date && slotId && !availabilityUnknown)
+        ? Boolean(dateChosen && !availabilityUnknown)
         : step === 3
           ? Boolean(details.name.trim() && details.phone.trim() && details.location.trim() && agreed)
           : true;
@@ -310,16 +335,16 @@ const BookingFlow = ({
             <dd className="text-right font-medium">{pack.name}</dd>
           </div>
         ) : null}
-        {date ? (
+        {dateDisplay ? (
           <div className="flex justify-between gap-3 py-0.5">
             <dt className="text-muted-foreground">Date</dt>
-            <dd className="text-right font-medium">{formatLongDate(date)}</dd>
+            <dd className="text-right font-medium">{dateDisplay}</dd>
           </div>
         ) : null}
-        {slot ? (
+        {timeDisplay ? (
           <div className="flex justify-between gap-3 py-0.5">
             <dt className="text-muted-foreground">Time</dt>
-            <dd className="text-right font-medium">{slot.label}</dd>
+            <dd className="text-right font-medium">{timeDisplay}</dd>
           </div>
         ) : null}
         {pack ? (
@@ -353,8 +378,8 @@ const BookingFlow = ({
         customerLocation: details.location,
         serviceName: services.find((s) => s.slug === serviceSlug)?.name ?? "",
         packageName: pack.name,
-        shootDate: date ? formatLongDate(date) : "",
-        slotLabel: slot?.label ?? "",
+        shootDate: dateDisplay,
+        slotLabel: timeDisplay,
         deliverables: pack.features,
         totalRupees: total,
         paidRupees: payMode === "full" ? total : advance,
@@ -388,12 +413,12 @@ const BookingFlow = ({
                 <div className="flex justify-between gap-3 py-0.5">
                   <dt className="text-muted-foreground">Date</dt>
                   <dd className="text-right font-medium">
-                    {date ? formatLongDate(date) : "—"}
+                    {dateDisplay || "—"}
                   </dd>
                 </div>
                 <div className="flex justify-between gap-3 py-0.5">
                   <dt className="text-muted-foreground">Time</dt>
-                  <dd className="text-right font-medium">{slot?.label}</dd>
+                  <dd className="text-right font-medium">{timeDisplay}</dd>
                 </div>
                 <div className="mt-1.5 flex justify-between gap-3 border-t border-border pt-2">
                   <dt className="text-muted-foreground">
@@ -547,20 +572,60 @@ const BookingFlow = ({
                 <DialogTitle className="mb-1 text-[1.15rem] font-semibold tracking-[-0.02em]">
                   When would you like the shoot?
                 </DialogTitle>
-                <p className="mb-4 text-[0.88rem] text-muted-foreground">
+                <p className="mb-3 text-[0.88rem] text-muted-foreground">
                   Unavailable dates are greyed out.
                 </p>
 
+                {/* One day, or a multi-day event like a wedding. */}
+                <div className="mb-3 flex gap-1.5">
+                  {(["single", "range"] as const).map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => {
+                        setDateMode(m);
+                        setDate("");
+                        setSlotId("");
+                        setRangeStart("");
+                        setRangeEnd("");
+                      }}
+                      className={cn(
+                        "rounded-full px-3.5 py-1.5 text-[0.82rem] font-medium transition-colors",
+                        dateMode === m
+                          ? "bg-primary text-primary-foreground"
+                          : "border border-border hover:border-foreground"
+                      )}
+                    >
+                      {m === "single" ? "Single day" : "Multiple days"}
+                    </button>
+                  ))}
+                </div>
+
                 <BookingCalendar
+                  mode={dateMode}
                   selected={date}
+                  rangeStart={rangeStart}
+                  rangeEnd={rangeEnd}
                   fullDays={fullDays}
                   onSelect={(iso) => {
                     setDate(iso);
                     setSlotId("");
                   }}
+                  onRangeSelect={(a, b) => {
+                    setRangeStart(a);
+                    setRangeEnd(b);
+                  }}
                 />
 
-                {date ? (
+                {dateMode === "range" && rangeStart ? (
+                  <p className="mt-3 text-[0.85rem] text-muted-foreground">
+                    {rangeEnd
+                      ? `${formatLongDate(rangeStart)} → ${formatLongDate(rangeEnd)}`
+                      : `${formatLongDate(rangeStart)} → now pick the last day`}
+                  </p>
+                ) : null}
+
+                {dateMode === "single" && date ? (
                   <div className="mt-4 flex flex-wrap gap-2">
                     {booking.slots.map((s) => {
                       const taken = takenSlotIds.has(s.id);
@@ -601,7 +666,7 @@ const BookingFlow = ({
                   </p>
                 ) : null}
 
-                {slotId && !availabilityUnknown ? (
+                {dateChosen && !availabilityUnknown ? (
                   <p className="mt-4 rounded-lg bg-secondary px-3.5 py-3 text-[0.84rem] text-secondary-foreground">
                     Your date is reserved once you submit — we&rsquo;ll confirm it
                     within 48 hours.
@@ -739,7 +804,7 @@ const BookingFlow = ({
                   <div className="rounded-xl border border-border bg-muted/40 p-4 text-[0.9rem] text-[hsl(var(--ink-soft))]">
                     <p className="font-medium text-foreground">Reserve now, pay in person</p>
                     <p className="mt-1">
-                      We&rsquo;ll hold {date ? formatLongDate(date) : "your date"} and
+                      We&rsquo;ll hold {dateDisplay || "your date"} and
                       confirm once we&rsquo;ve received your payment. We&rsquo;ll message
                       you on WhatsApp to arrange it.
                     </p>

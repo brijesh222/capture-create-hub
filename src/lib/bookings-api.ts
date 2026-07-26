@@ -21,6 +21,8 @@ export interface NewBooking {
   pack: PackageItem;
   /** YYYY-MM-DD */
   day: string;
+  /** Set for a multi-day booking; last day inclusive. */
+  endDay?: string;
   slotId: string;
   slotLabel: string;
   /** "HH:MM" local times from the slot config. */
@@ -92,11 +94,16 @@ export async function createBooking(input: NewBooking): Promise<BookingResult> {
       ? totalPaise
       : Math.round((totalPaise * input.advancePercent) / 100);
 
-  // The booking occupies exactly its slot's hours, so a morning shoot leaves
-  // the evening bookable — while a "full day" slot spans both and blocks them.
+  // Single-day: occupy exactly the slot's hours, so a morning shoot leaves the
+  // evening bookable. Multi-day: occupy whole days across the range.
   // Times are Asia/Kolkata; the database stores UTC.
-  const startsAt = new Date(`${input.day}T${input.slotStart}:00+05:30`);
-  const endsAt = new Date(`${input.day}T${input.slotEnd}:00+05:30`);
+  const multiDay = Boolean(input.endDay && input.endDay !== input.day);
+  const startsAt = new Date(
+    `${input.day}T${multiDay ? "08:00" : input.slotStart}:00+05:30`
+  );
+  const endsAt = new Date(
+    `${multiDay ? input.endDay : input.day}T${multiDay ? "19:00" : input.slotEnd}:00+05:30`
+  );
   const holdExpires = new Date(Date.now() + PENDING_HOURS * 60 * 60 * 1000);
 
   const { error } = await supabase.from("bookings").insert({

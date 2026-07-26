@@ -37,6 +37,7 @@ interface Payload {
   serviceSlug: string;
   packageRef: string;
   day: string; // YYYY-MM-DD
+  endDay?: string; // set for a multi-day booking; last day inclusive
   slotId: string;
   payMode: "advance" | "full";
   name: string;
@@ -105,8 +106,14 @@ Deno.serve(async (req) => {
   // ---- create the booking first, so the slot is taken before we charge ----
   // If this fails on the overlap constraint, somebody else got the slot and we
   // must not take the customer's money.
-  const startsAt = new Date(`${body.day}T${slot.start}:00+05:30`);
-  const endsAt = new Date(`${body.day}T${slot.end}:00+05:30`);
+  //
+  // A multi-day booking occupies whole days across the range; a single-day one
+  // occupies its slot.
+  const multiDay = Boolean(body.endDay && body.endDay !== body.day);
+  const startsAt = new Date(`${body.day}T${multiDay ? "08:00" : slot.start}:00+05:30`);
+  const endsAt = new Date(
+    `${multiDay ? body.endDay : body.day}T${multiDay ? "19:00" : slot.end}:00+05:30`
+  );
 
   const { data: booking, error: bookingError } = await supabase
     .from("bookings")
@@ -124,7 +131,7 @@ Deno.serve(async (req) => {
       contact_email: body.email || null,
       location_note: body.location,
       customer_notes: body.notes ?? "",
-      slot_id: body.slotId,
+      slot_id: multiDay ? "fullday" : body.slotId,
       service_slug: body.serviceSlug,
       package_ref: body.packageRef,
     })
