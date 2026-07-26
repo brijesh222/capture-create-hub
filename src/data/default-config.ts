@@ -258,8 +258,8 @@ export const defaultHomeSections: HomeSections = {
     "work",
     "packages",
     "about",
-    "reviews",
     "team",
+    "reviews",
     "bookBand",
     "faq",
   ],
@@ -560,15 +560,33 @@ export function mergeWithDefaults(partial: Partial<SiteConfig>): SiteConfig {
         : defaultHomeSections.booking.workingDays,
       blackoutDates: partial.booking?.blackoutDates ?? defaultHomeSections.booking.blackoutDates,
     },
-    // Keep the saved order, but append any sections added since it was saved
-    // (e.g. "team"), so new sections can actually render for existing configs.
+    // Keep the saved order, but slot any newly-added sections (e.g. "team") in
+    // at their default position — after the section they follow in the defaults
+    // — rather than dumping them at the end.
     sectionOrder: partial.sectionOrder?.length
-      ? [
-          ...partial.sectionOrder,
-          ...defaultHomeSections.sectionOrder.filter(
-            (k) => !partial.sectionOrder!.includes(k)
-          ),
-        ]
+      ? mergeSectionOrder(partial.sectionOrder)
       : defaultHomeSections.sectionOrder,
   };
+}
+
+/** Merge a saved order with the defaults, inserting missing sections by their
+ *  default adjacency so a new section lands where it was designed to. */
+function mergeSectionOrder(saved: SiteConfig["sectionOrder"]): SiteConfig["sectionOrder"] {
+  const result = [...saved];
+  const def = defaultHomeSections.sectionOrder;
+  def.forEach((key, i) => {
+    if (result.includes(key)) return;
+    // Find the nearest earlier default section that's already in the result,
+    // and insert right after it; otherwise put it at the front.
+    let insertAt = 0;
+    for (let j = i - 1; j >= 0; j--) {
+      const idx = result.indexOf(def[j]);
+      if (idx !== -1) {
+        insertAt = idx + 1;
+        break;
+      }
+    }
+    result.splice(insertAt, 0, key);
+  });
+  return result;
 }
