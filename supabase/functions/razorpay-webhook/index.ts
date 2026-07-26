@@ -186,6 +186,21 @@ Deno.serve(async (req) => {
       .select("*")
       .single();
 
+    // Add to Google Calendar. Best-effort — a calendar failure must not fail
+    // the webhook, or Razorpay would retry and risk double-processing.
+    try {
+      await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/add-to-calendar`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ bookingId: paymentRow.booking_id }),
+      });
+    } catch {
+      /* ignore */
+    }
+
     // ---- notify both sides ----
     // Claim the send first. The unique idempotency key means a retried webhook
     // loses the race and skips, so nobody gets the same email twice.

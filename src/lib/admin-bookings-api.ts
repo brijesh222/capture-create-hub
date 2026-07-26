@@ -184,7 +184,16 @@ export async function markCashReceived(
       updated_at: new Date().toISOString(),
     })
     .eq("id", bookingId);
-  return !bErr;
+  if (bErr) return false;
+
+  // Add it to Google Calendar. Best-effort: a calendar hiccup must not make the
+  // cash confirmation itself look like it failed.
+  try {
+    await supabase.functions.invoke("add-to-calendar", { body: { bookingId } });
+  } catch {
+    /* ignore — the booking is confirmed regardless */
+  }
+  return true;
 }
 
 /** Attach a gallery link and mark the booking delivered. */
