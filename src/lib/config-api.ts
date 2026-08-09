@@ -64,6 +64,15 @@ export async function saveConfigToCloud(
   }
 
   try {
+    // Grab the version we're about to replace, so it can be restored (undo).
+    // Snapshotting the *previous* state (not the new one) means the top of the
+    // history is always "what it looked like before the last change".
+    const { data: prevRow } = await supabase
+      .from("site_config")
+      .select("config")
+      .eq("id", CONFIG_ROW_ID)
+      .maybeSingle();
+
     const { data, error } = await supabase
       .from("site_config")
       .update({ config, updated_at: new Date().toISOString() })
@@ -78,15 +87,16 @@ export async function saveConfigToCloud(
       return { ok: false, message: "Save was rejected. Sign in again and retry." };
     }
 
-    // Snapshot this version for the super admin's history/undo. Best-effort:
-    // a failed snapshot must not fail the save.
+    // Best-effort: a failed snapshot must not fail the save.
     try {
-      await supabase.from("config_history").insert({
-        config,
-        saved_by: sessionData.session.user.id,
-        saved_by_email: sessionData.session.user.email ?? "",
-        note: "",
-      });
+      if (prevRow?.config) {
+        await supabase.from("config_history").insert({
+          config: prevRow.config,
+          saved_by: sessionData.session.user.id,
+          saved_by_email: sessionData.session.user.email ?? "",
+          note: "",
+        });
+      }
     } catch {
       /* ignore */
     }

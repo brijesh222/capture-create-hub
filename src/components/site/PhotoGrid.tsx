@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight, X } from "lucide-react";
 
 export interface GridPhoto {
@@ -30,6 +30,20 @@ const PhotoGrid = ({
 }) => {
   const [shown, setShown] = useState(initialCount);
   const [lightbox, setLightbox] = useState<number | null>(null);
+  const touchStartX = useRef<number | null>(null);
+
+  const go = (dir: 1 | -1) =>
+    setLightbox((i) => (i === null ? i : (i + dir + photos.length) % photos.length));
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.changedTouches[0]?.clientX ?? null;
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null || photos.length < 2) return;
+    const dx = (e.changedTouches[0]?.clientX ?? 0) - touchStartX.current;
+    if (Math.abs(dx) > 45) go(dx < 0 ? 1 : -1); // swipe left → next, right → prev
+    touchStartX.current = null;
+  };
 
   // A shorter list (switching service, admin removing photos) must not leave
   // the "See more" button showing a count that no longer exists.
@@ -98,8 +112,10 @@ const PhotoGrid = ({
           role="dialog"
           aria-modal="true"
           aria-label={photos[lightbox].caption || alt}
-          className="fixed inset-0 z-[80] flex items-center justify-center bg-black/90 p-4"
+          className="fixed inset-0 z-[80] flex touch-pan-y select-none items-center justify-center bg-black/90 p-4"
           onClick={() => setLightbox(null)}
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
         >
           <button
             type="button"
