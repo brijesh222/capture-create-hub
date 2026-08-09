@@ -28,7 +28,10 @@ export interface CategoryConfig {
   /** Optional theme preset applied only on this service's page (auto-theme by
    *  category, e.g. pink for maternity). Blank = use the site's default theme. */
   themeId?: string;
-  /** Optional YouTube link shown as an embedded player on the service page. */
+  /** YouTube links (videos or Reels) shown as embedded players on the service
+   *  page. Reels render vertical automatically. */
+  videos?: string[];
+  /** @deprecated single video — migrated into `videos` on load. */
   videoUrl?: string;
 }
 
@@ -212,6 +215,9 @@ export interface PackageItem {
   ctaText: string;
   /** Which service this belongs to. Blank shows it on every service page. */
   serviceSlug?: string;
+  /** Original price before a discount. When set, it's shown struck-through
+   *  next to `price` (the offer price). Blank = no discount shown. */
+  originalPrice?: string;
 }
 
 export interface PackagesConfig {
@@ -321,6 +327,9 @@ export interface BookingConfig {
   enabled: boolean;
   /** Percentage of the package price taken up front. */
   advancePercent: number;
+  /** When false, single-day bookings skip slot selection and book the whole
+   *  day (for shoots like weddings that aren't slot-based). Default true. */
+  slotsEnabled?: boolean;
   slots: BookingSlot[];
   /** Weekdays the studio works. 0 = Sunday. */
   workingDays: number[];

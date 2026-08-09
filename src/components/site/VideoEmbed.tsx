@@ -18,12 +18,15 @@ const VideoEmbed = ({
   className,
   cover = false,
   background = false,
+  reel = false,
 }: {
   url?: string;
   title?: string;
   className?: string;
   cover?: boolean;
   background?: boolean;
+  /** Render in a vertical 9:16 frame (YouTube Shorts / Reels). */
+  reel?: boolean;
 }) => {
   const id = url ? youTubeId(url) : null;
   if (!id) return null;
@@ -71,7 +74,8 @@ const VideoEmbed = ({
   return (
     <div
       className={cn(
-        "relative aspect-video w-full overflow-hidden rounded-[20px] border border-border bg-muted",
+        "relative w-full overflow-hidden rounded-[20px] border border-border bg-muted",
+        reel ? "aspect-[9/16]" : "aspect-video",
         className
       )}
     >

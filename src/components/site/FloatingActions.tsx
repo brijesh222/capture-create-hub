@@ -1,15 +1,17 @@
-import { MessageCircle, Phone } from "lucide-react";
+import { Instagram, MessageCircle, Phone } from "lucide-react";
 import { useSiteConfig } from "@/context/SiteConfigContext";
 import { getCallLink, getWhatsAppLink } from "@/lib/site-config-utils";
 import { WhatsAppDot } from "./parts";
 
 /**
- * Two persistent ways to get in touch: round buttons on every screen, plus a
- * bottom bar on phones where reaching the header is awkward mid-scroll.
+ * Persistent ways to get in touch: round buttons on every screen (WhatsApp,
+ * Instagram, Call), plus a bottom bar on phones where reaching the header is
+ * awkward mid-scroll.
  */
 const FloatingActions = ({ onBook }: { onBook: () => void }) => {
   const { config } = useSiteConfig();
   const whatsapp = getWhatsAppLink(config);
+  const instagram = config.contact.instagram?.replace(/^@/, "").trim();
 
   return (
     <>
@@ -23,6 +25,21 @@ const FloatingActions = ({ onBook }: { onBook: () => void }) => {
         >
           <MessageCircle className="h-5 w-5" aria-hidden="true" />
         </a>
+        {instagram ? (
+          <a
+            href={`https://instagram.com/${instagram}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Follow us on Instagram"
+            className="flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg transition-transform hover:scale-105"
+            style={{
+              background:
+                "linear-gradient(45deg, #feda75, #fa7e1e, #d62976, #962fbf, #4f5bd5)",
+            }}
+          >
+            <Instagram className="h-5 w-5" aria-hidden="true" />
+          </a>
+        ) : null}
         <a
           href={getCallLink(config)}
           aria-label="Call us"

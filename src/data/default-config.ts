@@ -244,6 +244,7 @@ export const defaultHomeSections: HomeSections = {
   booking: {
     enabled: true,
     advancePercent: 10,
+    slotsEnabled: true,
     slots: [
       { id: "morning", label: "Morning · 8–11 am", start: "08:00", end: "11:00" },
       { id: "afternoon", label: "Afternoon · 12–3 pm", start: "12:00", end: "15:00" },
@@ -505,7 +506,14 @@ export function mergeWithDefaults(partial: Partial<SiteConfig>): SiteConfig {
           const base = defaultSiteConfig.categories.find(
             (d) => d.id === c.id || d.slug === c.slug
           );
-          return { ...base, ...c, media: c.media ?? [] };
+          // Fold the old single videoUrl into the new videos list so configs
+          // saved before multi-video keep showing their video.
+          const videos = c.videos?.length
+            ? c.videos
+            : c.videoUrl
+              ? [c.videoUrl]
+              : [];
+          return { ...base, ...c, media: c.media ?? [], videos };
         })
       : defaultSiteConfig.categories,
     contact: { ...defaultSiteConfig.contact, ...partial.contact },

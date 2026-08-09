@@ -89,13 +89,19 @@ const BookingFlow = ({
   const total = parsePrice(pack?.price ?? "");
   const advance = advanceAmount(pack, booking.advancePercent);
   const balance = balanceAmount(pack, booking.advancePercent);
-  const slot = booking.slots.find((s) => s.id === slotId);
+  // When the studio turns slots off, a single-day booking is a whole-day
+  // booking — no time picker, mirroring how a multi-day range already works.
+  const slotsOn = config.booking.slotsEnabled !== false;
+  const effectiveSlotId = dateMode === "single" && !slotsOn ? "fullday" : slotId;
+  const slot = booking.slots.find((s) => s.id === effectiveSlotId);
 
-  // Single-day uses one date + a slot; range uses start..end as full days.
+  // Single-day uses one date (+ a slot when slots are on); range uses start..end.
   const bookingDay = dateMode === "single" ? date : rangeStart;
   const bookingEndDay = dateMode === "single" ? "" : rangeEnd;
   const dateChosen =
-    dateMode === "single" ? Boolean(date && slotId) : Boolean(rangeStart && rangeEnd);
+    dateMode === "single"
+      ? Boolean(date && (!slotsOn || slotId))
+      : Boolean(rangeStart && rangeEnd);
 
   // Human-readable date/time used across the summary, message and receipt.
   const dateDisplay =
@@ -106,7 +112,8 @@ const BookingFlow = ({
       : date
         ? formatLongDate(date)
         : "";
-  const timeDisplay = dateMode === "range" ? "Full days" : slot?.label ?? "";
+  const timeDisplay =
+    dateMode === "range" ? "Full days" : slot?.label ?? (slotsOn ? "" : "Full day");
 
   /* Reset whenever the dialog opens, honouring whatever the customer clicked. */
   useEffect(() => {
@@ -210,7 +217,7 @@ const BookingFlow = ({
       packageRef: pack.id,
       day: bookingDay,
       endDay: bookingEndDay,
-      slotId,
+      slotId: effectiveSlotId,
       payMode,
       name: details.name,
       phone: details.phone,
@@ -253,8 +260,8 @@ const BookingFlow = ({
       pack,
       day: bookingDay,
       endDay: bookingEndDay,
-      slotId: dateMode === "range" ? "fullday" : slotId,
-      slotLabel: dateMode === "range" ? "Full days" : slot?.label ?? "",
+      slotId: dateMode === "range" ? "fullday" : effectiveSlotId,
+      slotLabel: dateMode === "range" ? "Full days" : timeDisplay,
       slotStart: slot?.start ?? "08:00",
       slotEnd: slot?.end ?? "19:00",
       name: details.name,
@@ -625,7 +632,7 @@ const BookingFlow = ({
                   </p>
                 ) : null}
 
-                {dateMode === "single" && date ? (
+                {dateMode === "single" && date && slotsOn ? (
                   <div className="mt-4 flex flex-wrap gap-2">
                     {booking.slots.map((s) => {
                       const taken = takenSlotIds.has(s.id);
@@ -649,6 +656,12 @@ const BookingFlow = ({
                       );
                     })}
                   </div>
+                ) : null}
+
+                {dateMode === "single" && date && !slotsOn ? (
+                  <p className="mt-4 text-[0.85rem] text-muted-foreground">
+                    This books the <strong className="font-medium text-foreground">whole day</strong> for your shoot.
+                  </p>
                 ) : null}
 
                 {loadingBusy ? (

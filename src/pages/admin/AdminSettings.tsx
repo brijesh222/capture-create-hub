@@ -72,22 +72,40 @@ const AdminSettings = () => {
             <p className="mt-1 text-[0.75rem] text-muted-foreground">Days not selected are closed for bookings.</p>
           </div>
 
-          <div>
-            <span className="mb-1 block text-[0.82rem] font-medium">Time slots</span>
-            <ListEditor
-              items={config.booking.slots}
-              onChange={(slots) => patch("booking", { slots })}
-              makeNew={() => ({ id: uid(), label: "New slot", start: "09:00", end: "12:00" })}
-              addLabel="Add slot"
-              renderItem={(sl, u) => (
-                <div className="grid grid-cols-[1fr_auto_auto] items-center gap-2">
-                  <input className="rounded-lg border border-border bg-card px-3 py-2 text-[0.88rem]" value={sl.label} placeholder="Morning · 8–11 am" onChange={(e) => u({ label: e.target.value })} />
-                  <input type="time" className="rounded-lg border border-border bg-card px-2 py-2 text-[0.82rem]" value={sl.start} onChange={(e) => u({ start: e.target.value })} />
-                  <input type="time" className="rounded-lg border border-border bg-card px-2 py-2 text-[0.82rem]" value={sl.end} onChange={(e) => u({ end: e.target.value })} />
-                </div>
-              )}
-            />
+          <div className="rounded-lg border border-border bg-background px-3 py-2.5">
+            <label className="flex items-center gap-2 text-[0.85rem] font-medium">
+              <input
+                type="checkbox"
+                checked={config.booking.slotsEnabled !== false}
+                onChange={(e) => patch("booking", { slotsEnabled: e.target.checked })}
+              />
+              Use time slots
+            </label>
+            <p className="mt-1 text-[0.75rem] text-muted-foreground">
+              On: customers pick a time slot (below) for single-day shoots. Off: a single-day
+              booking takes the whole day — best for weddings and events. Multi-day bookings are
+              always full days.
+            </p>
           </div>
+
+          {config.booking.slotsEnabled !== false ? (
+            <div>
+              <span className="mb-1 block text-[0.82rem] font-medium">Time slots</span>
+              <ListEditor
+                items={config.booking.slots}
+                onChange={(slots) => patch("booking", { slots })}
+                makeNew={() => ({ id: uid(), label: "New slot", start: "09:00", end: "12:00" })}
+                addLabel="Add slot"
+                renderItem={(sl, u) => (
+                  <div className="grid grid-cols-[1fr_auto_auto] items-center gap-2">
+                    <input className="rounded-lg border border-border bg-card px-3 py-2 text-[0.88rem]" value={sl.label} placeholder="Morning · 8–11 am" onChange={(e) => u({ label: e.target.value })} />
+                    <input type="time" className="rounded-lg border border-border bg-card px-2 py-2 text-[0.82rem]" value={sl.start} onChange={(e) => u({ start: e.target.value })} />
+                    <input type="time" className="rounded-lg border border-border bg-card px-2 py-2 text-[0.82rem]" value={sl.end} onChange={(e) => u({ end: e.target.value })} />
+                  </div>
+                )}
+              />
+            </div>
+          ) : null}
 
           <div>
             <span className="mb-1 block text-[0.82rem] font-medium">Blackout dates (days off)</span>

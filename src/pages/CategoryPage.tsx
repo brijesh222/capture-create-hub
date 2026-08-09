@@ -11,7 +11,7 @@ import SiteFooter from "@/components/site/SiteFooter";
 import FloatingActions from "@/components/site/FloatingActions";
 import ServicePackages from "@/components/site/ServicePackages";
 import PhotoGrid, { type GridPhoto } from "@/components/site/PhotoGrid";
-import VideoEmbed from "@/components/site/VideoEmbed";
+import CategoryVideos from "@/components/site/CategoryVideos";
 import { SectionHeading, WhatsAppDot } from "@/components/site/parts";
 import {
   Accordion,
@@ -209,11 +209,7 @@ const CategoryPage = () => {
                 : "More from this service coming soon."
             }
           />
-          {service.videoUrl ? (
-            <div className="mx-auto mb-8 max-w-3xl">
-              <VideoEmbed url={service.videoUrl} title={`${service.name} film`} />
-            </div>
-          ) : null}
+          <CategoryVideos videos={service.videos} title={`${service.name} film`} />
           {gallery.length === 1 ? (
             /* A single photo in a masonry gallery reads as a broken layout, so
                one image gets shown wide instead. */

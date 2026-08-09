@@ -97,13 +97,21 @@ const AdminServices = () => {
             value={svc.intro ?? svc.description}
             onChange={(v) => update(svc.id, { intro: v })}
           />
-          <TextField
-            label="Featured video (YouTube URL)"
-            value={svc.videoUrl ?? ""}
-            onChange={(v) => update(svc.id, { videoUrl: v })}
-            placeholder="https://youtu.be/…"
-            hint="Paste any YouTube link — it becomes an embedded player above the gallery. Blank hides it."
-          />
+          <div>
+            <span className="mb-1 block text-[0.82rem] font-medium">Videos &amp; Reels (YouTube)</span>
+            <ListEditor
+              items={(svc.videos ?? []).map((url) => ({ url }))}
+              onChange={(rows) => update(svc.id, { videos: rows.map((r) => r.url).filter(Boolean), videoUrl: "" })}
+              makeNew={() => ({ url: "" })}
+              addLabel="Add video"
+              renderItem={(row, u) => (
+                <input className="w-full rounded-lg border border-border bg-card px-3 py-2 text-[0.88rem]" value={row.url} placeholder="youtu.be/…  or  youtube.com/shorts/…" onChange={(e) => u({ url: e.target.value })} />
+              )}
+            />
+            <p className="mt-1 text-[0.75rem] text-muted-foreground">
+              Paste YouTube links — normal videos show wide, Shorts/Reels show vertical. They appear as a swipeable row above the gallery.
+            </p>
+          </div>
 
           <div>
             <span className="mb-1 block text-[0.82rem] font-medium">What's included</span>
@@ -150,9 +158,10 @@ const AdminServices = () => {
               addLabel="Add package"
               renderItem={(pk, u) => (
                 <div className="flex flex-col gap-2">
+                  <input className="rounded-lg border border-border bg-card px-3 py-2 text-[0.88rem] font-medium" value={pk.name} placeholder="Name" onChange={(e) => u({ name: e.target.value })} />
                   <div className="grid grid-cols-2 gap-2">
-                    <input className="rounded-lg border border-border bg-card px-3 py-2 text-[0.88rem] font-medium" value={pk.name} placeholder="Name" onChange={(e) => u({ name: e.target.value })} />
-                    <input className="rounded-lg border border-border bg-card px-3 py-2 text-[0.88rem]" value={pk.price} placeholder="₹15,000" onChange={(e) => u({ price: e.target.value })} />
+                    <input className="rounded-lg border border-border bg-card px-3 py-2 text-[0.88rem]" value={pk.price} placeholder="Offer price ₹15,000" onChange={(e) => u({ price: e.target.value })} />
+                    <input className="rounded-lg border border-border bg-card px-3 py-2 text-[0.88rem]" value={pk.originalPrice ?? ""} placeholder="Was ₹18,000 (optional)" onChange={(e) => u({ originalPrice: e.target.value })} />
                   </div>
                   <input className="rounded-lg border border-border bg-card px-3 py-2 text-[0.88rem]" value={pk.priceNote} placeholder="2 hours · indoor" onChange={(e) => u({ priceNote: e.target.value })} />
                   <input className="rounded-lg border border-border bg-card px-3 py-2 text-[0.88rem]" value={pk.features.join(", ")} placeholder="Features, comma separated" onChange={(e) => u({ features: e.target.value.split(",").map((f) => f.trim()).filter(Boolean) })} />

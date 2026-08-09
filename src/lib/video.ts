@@ -22,3 +22,8 @@ export function toYouTubeEmbed(url: string): string | null {
   const id = youTubeId(url);
   return id ? `https://www.youtube.com/embed/${id}` : null;
 }
+
+/** A YouTube Short / Reel is vertical, so it should render in a portrait frame. */
+export function isYouTubeShort(url: string): boolean {
+  return /youtube\.com\/shorts\//i.test(url || "");
+}

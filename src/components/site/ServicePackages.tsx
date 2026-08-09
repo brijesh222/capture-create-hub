@@ -1,7 +1,7 @@
 import { Check, MessageCircle } from "lucide-react";
 import { useSiteConfig } from "@/context/SiteConfigContext";
 import { getWhatsAppLink } from "@/lib/site-config-utils";
-import { SectionHeading } from "./parts";
+import { SectionHeading, PackagePrice } from "./parts";
 import { cn } from "@/lib/utils";
 
 /**
@@ -56,16 +56,11 @@ const ServicePackages = ({
                 ) : null}
               </div>
 
-              <div>
-                <div className="text-[1.85rem] font-light tabular-nums tracking-[-0.03em]">
-                  {pack.price}
-                </div>
-                {pack.priceNote ? (
-                  <div className="mt-0.5 text-[0.82rem] text-muted-foreground">
-                    {pack.priceNote}
-                  </div>
-                ) : null}
-              </div>
+              <PackagePrice
+                price={pack.price}
+                originalPrice={pack.originalPrice}
+                priceNote={pack.priceNote}
+              />
 
               <ul className="flex flex-col gap-2 py-1 text-[0.9rem] text-[hsl(var(--ink-soft))]">
                 {pack.features.map((f) => (
