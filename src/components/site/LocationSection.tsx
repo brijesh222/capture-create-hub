@@ -1,6 +1,6 @@
 import { ArrowUpRight, MapPin } from "lucide-react";
 import { useSiteConfig } from "@/context/SiteConfigContext";
-import { directionsLink, toMapsEmbed } from "@/lib/maps";
+import { directionsLink, mapsQuery, toMapsEmbed } from "@/lib/maps";
 import { SectionHeading } from "./parts";
 
 /**
@@ -13,6 +13,9 @@ const LocationSection = () => {
   const loc = config.location;
   const address = loc.address || config.contact.location;
   const embed = toMapsEmbed(loc.mapsEmbedUrl, address);
+  // Directions target the same place the map is centred on, never a stray text
+  // field, so the pin and "Get directions" always agree.
+  const directionsTarget = mapsQuery(loc.mapsEmbedUrl, address);
 
   if (!loc.enabled || !embed) return null;
 
@@ -35,7 +38,7 @@ const LocationSection = () => {
           </div>
           {address ? (
             <a
-              href={directionsLink(address)}
+              href={directionsLink(directionsTarget)}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex w-fit items-center gap-1.5 rounded-full bg-primary px-5 py-2.5 text-[0.9rem] font-medium text-primary-foreground transition-colors hover:bg-[hsl(var(--gold-dark))]"

@@ -32,7 +32,30 @@ export function toMapsEmbed(embedUrl?: string, address?: string): string | null 
   return null;
 }
 
-/** A link that opens directions to the address in Google Maps. */
-export function directionsLink(address: string): string {
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+/**
+ * The place or coordinates the map is centred on, extracted from the embed's
+ * `q=` value. Directions are built from this so the pin and the "Get directions"
+ * link always point at the same spot — otherwise a vague address field and a
+ * precise embed can disagree. Falls back to the address when there's no embed.
+ */
+export function mapsQuery(embedUrl?: string, address?: string): string {
+  const raw = (embedUrl || "").trim();
+  if (raw) {
+    const iframeSrc = raw.match(/src=["']([^"']+)["']/i);
+    const url = iframeSrc ? iframeSrc[1] : raw;
+    const m = url.match(/[?&]q=([^&"'\s]+)/i);
+    if (m) {
+      try {
+        return decodeURIComponent(m[1].replace(/\+/g, " "));
+      } catch {
+        return m[1];
+      }
+    }
+  }
+  return (address || "").trim();
+}
+
+/** A link that opens directions to a place or "lat,lng" in Google Maps. */
+export function directionsLink(query: string): string {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
 }
