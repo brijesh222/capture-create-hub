@@ -156,8 +156,16 @@ const AdminContent = () => {
               )}
             />
             <p className="mt-1 text-[0.75rem] text-muted-foreground">
-              Add images and videos here — the banner becomes a swipeable, auto-playing carousel. Videos play muted, on loop, with no controls. One slide = static banner. Leave empty to use the single cover photo above.
+              Add images and videos here — the banner becomes a swipeable carousel. Videos play muted, on loop, with no controls. One slide = static banner. Leave empty to use the single cover photo above.
             </p>
+            <label className="mt-2 flex items-center gap-2 text-[0.85rem]">
+              <input
+                type="checkbox"
+                checked={config.hero.slidesAutoplay === true}
+                onChange={(e) => patch("hero", { slidesAutoplay: e.target.checked })}
+              />
+              Auto-scroll the banner carousel
+            </label>
           </div>
           <TextField label="Eyebrow" value={config.hero.tagline} onChange={(v) => patch("hero", { tagline: v })} />
           <TextField label="Headline" value={config.hero.title} onChange={(v) => patch("hero", { title: v })} />

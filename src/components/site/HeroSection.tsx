@@ -66,7 +66,11 @@ const HeroSection = ({ onBook }: { onBook: () => void }) => {
         </div>
 
         {hasSlides ? (
-          <HeroCarousel slides={slides} label={hero.title || config.branding.siteName} />
+          <HeroCarousel
+            slides={slides}
+            label={hero.title || config.branding.siteName}
+            autoplay={hero.slidesAutoplay === true}
+          />
         ) : hasVideo ? (
           <VideoEmbed
             url={hero.videoUrl}

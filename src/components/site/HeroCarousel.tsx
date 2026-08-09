@@ -16,7 +16,15 @@ import type { HeroSlide } from "@/types/site-config";
  * videos. Every slide fills the same 4/5 frame (cropped to cover, never
  * distorted). Auto-advance pauses while the visitor interacts.
  */
-const HeroCarousel = ({ slides, label }: { slides: HeroSlide[]; label: string }) => {
+const HeroCarousel = ({
+  slides,
+  label,
+  autoplay = false,
+}: {
+  slides: HeroSlide[];
+  label: string;
+  autoplay?: boolean;
+}) => {
   const [api, setApi] = useState<CarouselApi>();
 
   // Only slides we can actually render.
@@ -25,7 +33,7 @@ const HeroCarousel = ({ slides, label }: { slides: HeroSlide[]; label: string })
   );
 
   useEffect(() => {
-    if (!api || valid.length <= 1) return;
+    if (!api || valid.length <= 1 || !autoplay) return;
     let paused = false;
     const node = api.rootNode();
     const onEnter = () => (paused = true);
@@ -42,7 +50,7 @@ const HeroCarousel = ({ slides, label }: { slides: HeroSlide[]; label: string })
       node.removeEventListener("pointerenter", onEnter);
       node.removeEventListener("pointerleave", onLeave);
     };
-  }, [api, valid.length]);
+  }, [api, valid.length, autoplay]);
 
   if (!valid.length) return null;
 

@@ -83,8 +83,11 @@ export interface HeroConfig {
    *  fills the hero cover slot instead of the cover photo. */
   videoUrl?: string;
   /** Carousel of images/videos for the cover slot. When 1+ valid slides exist
-   *  they replace the single photo/video, auto-playing and swipeable. */
+   *  they replace the single photo/video, swipeable (and auto-playing when
+   *  slidesAutoplay is on). */
   slides?: HeroSlide[];
+  /** Auto-advance the banner carousel. Default off — swipe/arrows only. */
+  slidesAutoplay?: boolean;
 }
 
 export interface ContactConfig {
