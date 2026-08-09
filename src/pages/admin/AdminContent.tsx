@@ -469,7 +469,7 @@ const AdminContent = () => {
             value={config.location.mapsEmbedUrl}
             onChange={(v) => patch("location", { mapsEmbedUrl: v })}
             rows={2}
-            hint="For a precise pin: Google Maps → Share → Embed a map → copy the link (or the whole <iframe>) and paste here. Leave blank to use the address above."
+            hint="Leave blank to use the address above. For an exact pin: Google Maps → Share → EMBED A MAP tab (not 'Send a link') → Copy HTML, and paste it here. Note: a plain 'Copy link' share link (goo.gl/…) will NOT work — use the address instead. You can also paste raw coordinates like 26.8613,75.7601."
           />
         </SectionCard>
 

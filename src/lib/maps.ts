@@ -13,10 +13,16 @@ export function toMapsEmbed(embedUrl?: string, address?: string): string | null 
     // If they pasted a whole <iframe …>, pull out the src attribute.
     const iframeSrc = raw.match(/src=["']([^"']+)["']/i);
     const url = iframeSrc ? iframeSrc[1] : raw;
-    if (/^https?:\/\//i.test(url)) {
-      if (/output=embed|\/maps\/embed/i.test(url)) return url;
-      const sep = url.includes("?") ? "&" : "?";
-      return `${url}${sep}output=embed`;
+    // Only a real embed URL can go straight into an iframe. Google's short
+    // share links (goo.gl/maps, maps.app.goo.gl) and normal place URLs are
+    // blocked by X-Frame-Options — using them would show a blank frame — so we
+    // ignore those and fall through to building an embed from the address.
+    if (/^https?:\/\//i.test(url) && /\/maps\/embed|[?&]output=embed/i.test(url)) {
+      return url;
+    }
+    // A plain lat,lng pair pasted into the box → pin it precisely.
+    if (/^-?\d{1,3}\.\d+\s*,\s*-?\d{1,3}\.\d+$/.test(raw)) {
+      return `https://www.google.com/maps?q=${encodeURIComponent(raw)}&output=embed`;
     }
   }
   const addr = (address || "").trim();
