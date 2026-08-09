@@ -134,13 +134,6 @@ const AdminContent = () => {
             value={config.hero.backgroundImageUrl}
             onChange={(v) => patch("hero", { backgroundImageUrl: v })}
           />
-          <TextField
-            label="Cover video (YouTube URL)"
-            value={config.hero.videoUrl ?? ""}
-            onChange={(v) => patch("hero", { videoUrl: v })}
-            placeholder="https://youtu.be/…"
-            hint="Optional. When set, a silent looping video fills the cover slot instead of the photo (same shape)."
-          />
           <div>
             <span className="mb-1 block text-[0.82rem] font-medium">Banner carousel (images &amp; videos)</span>
             <ListEditor
@@ -155,7 +148,7 @@ const AdminContent = () => {
                     <option value="video">Video (YouTube)</option>
                   </select>
                   {s.type === "video" ? (
-                    <input className="rounded-lg border border-border bg-card px-3 py-2 text-[0.88rem]" value={s.url} placeholder="https://youtu.be/…" onChange={(e) => u({ url: e.target.value })} />
+                    <input className="rounded-lg border border-border bg-card px-3 py-2 text-[0.88rem]" value={s.url} placeholder="https://youtu.be/…  or  youtube.com/shorts/…" onChange={(e) => u({ url: e.target.value })} />
                   ) : (
                     <ImageField label="" value={s.url} onChange={(v) => u({ url: v })} />
                   )}
@@ -163,7 +156,7 @@ const AdminContent = () => {
               )}
             />
             <p className="mt-1 text-[0.75rem] text-muted-foreground">
-              Add slides to turn the banner into a swipeable, auto-playing carousel. Each slide fills the same frame. Leave empty to use the single cover above.
+              Add images and videos here — the banner becomes a swipeable, auto-playing carousel. Videos play muted, on loop, with no controls. One slide = static banner. Leave empty to use the single cover photo above.
             </p>
           </div>
           <TextField label="Eyebrow" value={config.hero.tagline} onChange={(v) => patch("hero", { tagline: v })} />

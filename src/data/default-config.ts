@@ -498,7 +498,27 @@ export function saveSiteConfig(config: SiteConfig): void {
 
 export function mergeWithDefaults(partial: Partial<SiteConfig>): SiteConfig {
   return {
-    hero: { ...defaultSiteConfig.hero, ...partial.hero },
+    // Fold the old single "cover video" into the carousel slides so it shows in
+    // the hero (the carousel takes priority over the single video). One place for
+    // images and videos now.
+    hero: (() => {
+      const base = { ...defaultSiteConfig.hero, ...partial.hero };
+      const slides = base.slides ?? [];
+      if (
+        base.videoUrl &&
+        !slides.some((s) => s.type === "video" && s.url === base.videoUrl)
+      ) {
+        return {
+          ...base,
+          slides: [
+            { id: "hero-video", type: "video" as const, url: base.videoUrl },
+            ...slides,
+          ],
+          videoUrl: "",
+        };
+      }
+      return { ...base, slides };
+    })(),
     // Each saved category merges with *its own* default, matched by id or slug.
     // Using categories[0] as the base made every category inherit Wedding's
     // copy for any field the saved config predated.
