@@ -1,13 +1,16 @@
 import { Check } from "lucide-react";
 import { useSiteConfig } from "@/context/SiteConfigContext";
 import { getWhatsAppLink } from "@/lib/site-config-utils";
+import { toYouTubeEmbed } from "@/lib/video";
 import { WhatsAppDot } from "./parts";
+import VideoEmbed from "./VideoEmbed";
 import heroFallback from "@/assets/hero-wedding.jpg";
 
 const HeroSection = ({ onBook }: { onBook: () => void }) => {
   const { config } = useSiteConfig();
   const { hero } = config;
   const image = hero.backgroundImageUrl || heroFallback;
+  const hasVideo = Boolean(hero.videoUrl && toYouTubeEmbed(hero.videoUrl));
 
   return (
     <section className="shell py-12 md:py-14">
@@ -57,12 +60,22 @@ const HeroSection = ({ onBook }: { onBook: () => void }) => {
           ) : null}
         </div>
 
-        <div
-          className="aspect-[4/5] rounded-[20px] bg-muted bg-cover bg-center"
-          style={{ backgroundImage: `url(${image})` }}
-          role="img"
-          aria-label={hero.title || config.branding.siteName}
-        />
+        {hasVideo ? (
+          <VideoEmbed
+            url={hero.videoUrl}
+            title={hero.title || config.branding.siteName}
+            cover
+            background
+            className="aspect-[4/5] rounded-[20px] border border-border bg-muted"
+          />
+        ) : (
+          <div
+            className="aspect-[4/5] rounded-[20px] bg-muted bg-cover bg-center"
+            style={{ backgroundImage: `url(${image})` }}
+            role="img"
+            aria-label={hero.title || config.branding.siteName}
+          />
+        )}
       </div>
     </section>
   );

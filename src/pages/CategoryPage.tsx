@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Check, Star } from "lucide-react";
 import { useSiteConfig } from "@/context/SiteConfigContext";
 import { getWhatsAppLink } from "@/lib/site-config-utils";
+import { applyThemeVars, applyCustomThemeColors } from "@/lib/theme-utils";
 import { getCategoryThumbnail } from "@/lib/category-images";
 import BookingFlow, { type BookingStart } from "@/components/booking/BookingFlow";
 import SiteHeader from "@/components/site/SiteHeader";
@@ -10,6 +11,7 @@ import SiteFooter from "@/components/site/SiteFooter";
 import FloatingActions from "@/components/site/FloatingActions";
 import ServicePackages from "@/components/site/ServicePackages";
 import PhotoGrid, { type GridPhoto } from "@/components/site/PhotoGrid";
+import VideoEmbed from "@/components/site/VideoEmbed";
 import { SectionHeading, WhatsAppDot } from "@/components/site/parts";
 import {
   Accordion,
@@ -43,6 +45,22 @@ const CategoryPage = () => {
       );
     }
   }, [service, config.branding.siteName]);
+
+  // Auto-theme by category: if this service has its own theme, apply it while
+  // the page is open and restore the site's default theme when leaving, so the
+  // colour never bleeds back to the home page.
+  useEffect(() => {
+    const preset = service?.themeId
+      ? config.themePresets.find((t) => t.id === service.themeId)
+      : undefined;
+    if (!preset) return;
+    applyThemeVars(preset.cssVars);
+    return () => {
+      const active = config.themePresets.find((t) => t.id === config.activeThemeId);
+      applyThemeVars(active?.cssVars);
+      applyCustomThemeColors(config.customThemeColors);
+    };
+  }, [service?.themeId, config.themePresets, config.activeThemeId, config.customThemeColors]);
 
   // Gallery prefers uploaded media, then the cover photo, so the page is never bare.
   const gallery: GridPhoto[] = useMemo(() => {
@@ -191,6 +209,11 @@ const CategoryPage = () => {
                 : "More from this service coming soon."
             }
           />
+          {service.videoUrl ? (
+            <div className="mx-auto mb-8 max-w-3xl">
+              <VideoEmbed url={service.videoUrl} title={`${service.name} film`} />
+            </div>
+          ) : null}
           {gallery.length === 1 ? (
             /* A single photo in a masonry gallery reads as a broken layout, so
                one image gets shown wide instead. */

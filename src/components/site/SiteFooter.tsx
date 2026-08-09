@@ -67,6 +67,26 @@ const SiteFooter = () => {
             >
               WhatsApp
             </a>
+            {contact.instagram ? (
+              <a
+                href={`https://instagram.com/${contact.instagram.replace(/^@/, "")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block py-1 text-[0.9rem] opacity-85 transition-opacity hover:opacity-100"
+              >
+                Instagram @{contact.instagram.replace(/^@/, "")}
+              </a>
+            ) : null}
+            {contact.website ? (
+              <a
+                href={contact.website.startsWith("http") ? contact.website : `https://${contact.website}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block py-1 text-[0.9rem] opacity-85 transition-opacity hover:opacity-100"
+              >
+                {contact.website.replace(/^https?:\/\//, "")}
+              </a>
+            ) : null}
           </div>
         </div>
 

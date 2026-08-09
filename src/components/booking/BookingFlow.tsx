@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useSiteConfig } from "@/context/SiteConfigContext";
-import { getWhatsAppLink } from "@/lib/site-config-utils";
+import { getWhatsAppLink, normalisePhone } from "@/lib/site-config-utils";
 import {
   advanceAmount,
   balanceAmount,
@@ -306,7 +306,7 @@ const BookingFlow = ({
       payMode === "advance" ? `Balance on shoot day: ${formatINR(balance)}` : "",
     ].filter(Boolean);
 
-    const number = config.contact.whatsappNumber.replace(/\D/g, "") || "917023433374";
+    const number = normalisePhone(config.contact.whatsappNumber);
     const url = `https://wa.me/${number}?text=${encodeURIComponent(lines.join("\n"))}`;
     window.open(url, "_blank", "noopener,noreferrer");
     setSentLink(url);

@@ -12,6 +12,7 @@ import ReviewsSection from "@/components/site/ReviewsSection";
 import BookBandSection from "@/components/site/BookBandSection";
 import FaqSection from "@/components/site/FaqSection";
 import TeamSection from "@/components/site/TeamSection";
+import LocationSection from "@/components/site/LocationSection";
 import SiteFooter from "@/components/site/SiteFooter";
 import FloatingActions from "@/components/site/FloatingActions";
 import type { HomeSectionKey } from "@/types/site-config";
@@ -49,6 +50,7 @@ const Index = () => {
     bookBand: <BookBandSection onBook={() => openBooking()} />,
     faq: <FaqSection />,
     team: <TeamSection />,
+    location: <LocationSection />,
   };
 
   return (

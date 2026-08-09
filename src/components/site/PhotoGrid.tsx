@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, X } from "lucide-react";
 
 export interface GridPhoto {
   id: string;
@@ -78,13 +78,17 @@ const PhotoGrid = ({
       </div>
 
       {remaining > 0 ? (
-        <div className="mt-6 flex justify-center">
+        <div className="mt-8 flex justify-center">
           <button
             type="button"
             onClick={() => setShown((s) => s + step)}
-            className="inline-flex items-center rounded-full border border-border px-6 py-3 text-[0.92rem] font-medium transition-colors hover:border-foreground"
+            className="group inline-flex items-center gap-2 rounded-full bg-primary px-8 py-3.5 text-[0.98rem] font-semibold text-primary-foreground shadow-md shadow-primary/20 transition-all duration-200 hover:scale-[1.03] hover:bg-[hsl(var(--gold-dark))] hover:shadow-lg hover:shadow-primary/30"
           >
-            See more ({remaining})
+            View Full Gallery
+            <span className="rounded-full bg-primary-foreground/15 px-2 py-0.5 text-[0.8rem] font-medium">
+              +{remaining}
+            </span>
+            <ChevronDown className="h-4 w-4 transition-transform duration-200 group-hover:translate-y-0.5" aria-hidden="true" />
           </button>
         </div>
       ) : null}

@@ -3,6 +3,7 @@ import { useSiteConfig } from "@/context/SiteConfigContext";
 import { getCategoryThumbnail } from "@/lib/category-images";
 import { SectionHeading } from "./parts";
 import PhotoGrid, { type GridPhoto } from "./PhotoGrid";
+import VideoEmbed from "./VideoEmbed";
 
 /**
  * Until the studio curates a featured set, fall back to each category's cover
@@ -39,6 +40,12 @@ const WorkSection = () => {
         highlight={work.headingHighlight}
         subheading={work.subheading}
       />
+
+      {work.videoUrl ? (
+        <div className="mx-auto mb-8 max-w-3xl">
+          <VideoEmbed url={work.videoUrl} title={`${work.heading}${work.headingHighlight}`} />
+        </div>
+      ) : null}
 
       <PhotoGrid photos={photos} alt="Photograph" initialCount={12} step={12} />
 

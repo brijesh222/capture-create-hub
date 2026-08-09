@@ -63,6 +63,13 @@ export function applySiteBackground(
   }
 }
 
+/** Set a preset's CSS variables on :root. Used to auto-theme a service page. */
+export function applyThemeVars(cssVars: Record<string, string> | undefined): void {
+  if (!cssVars) return;
+  const root = document.documentElement;
+  Object.entries(cssVars).forEach(([key, value]) => root.style.setProperty(key, value));
+}
+
 export function applyCustomThemeColors(colors: Record<string, string> | undefined): void {
   const root = document.documentElement;
   if (!colors || Object.keys(colors).length === 0) return;

@@ -30,6 +30,16 @@ const Invoice = forwardRef<HTMLDivElement, { data: InvoiceData }>(({ data }, ref
   const { contact, branding } = config;
   const due = data.totalRupees - data.paidRupees;
 
+  // Branding links for the invoice footer. Handles are stored bare; build the
+  // full URLs here so they stay clickable in the printed PDF and web view.
+  const igHandle = (contact.instagram || "").replace(/^@/, "").trim();
+  const website = (contact.website || "").trim();
+  const websiteHref = website
+    ? website.startsWith("http")
+      ? website
+      : `https://${website}`
+    : "";
+
   return (
     <div ref={ref} className="invoice-sheet">
       <header className="inv-head">
@@ -123,6 +133,18 @@ const Invoice = forwardRef<HTMLDivElement, { data: InvoiceData }>(({ data }, ref
           <span>{data.issuedOn}</span>
         </div>
       </footer>
+
+      {(igHandle || website) && (
+        <div className="inv-brand">
+          {igHandle ? (
+            <a href={`https://instagram.com/${igHandle}`}>Instagram&nbsp;@{igHandle}</a>
+          ) : null}
+          {igHandle && website ? <span className="inv-brand-dot">•</span> : null}
+          {website ? (
+            <a href={websiteHref}>{website.replace(/^https?:\/\//, "")}</a>
+          ) : null}
+        </div>
+      )}
     </div>
   );
 });

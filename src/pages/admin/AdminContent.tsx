@@ -17,6 +17,7 @@ const SECTION_TITLES: Record<HomeSectionKey, string> = {
   bookBand: "Booking band",
   faq: "FAQ",
   team: "Team",
+  location: "Location",
 };
 
 /**
@@ -129,9 +130,16 @@ const AdminContent = () => {
         {/* ---------------- Hero ---------------- */}
         <SectionCard title="Banner" subtitle="The first screen">
           <ImageField
-            label="Background photo"
+            label="Cover photo"
             value={config.hero.backgroundImageUrl}
             onChange={(v) => patch("hero", { backgroundImageUrl: v })}
+          />
+          <TextField
+            label="Cover video (YouTube URL)"
+            value={config.hero.videoUrl ?? ""}
+            onChange={(v) => patch("hero", { videoUrl: v })}
+            placeholder="https://youtu.be/…"
+            hint="Optional. When set, a silent looping video fills the cover slot instead of the photo (same shape)."
           />
           <TextField label="Eyebrow" value={config.hero.tagline} onChange={(v) => patch("hero", { tagline: v })} />
           <TextField label="Headline" value={config.hero.title} onChange={(v) => patch("hero", { title: v })} />
@@ -208,6 +216,13 @@ const AdminContent = () => {
             <TextField label="Highlight" value={config.work.headingHighlight} onChange={(v) => patch("work", { headingHighlight: v })} />
           </div>
           <TextArea label="Subheading" value={config.work.subheading} onChange={(v) => patch("work", { subheading: v })} />
+          <TextField
+            label="Featured video (YouTube URL)"
+            value={config.work.videoUrl ?? ""}
+            onChange={(v) => patch("work", { videoUrl: v })}
+            placeholder="https://youtu.be/…"
+            hint="Paste any YouTube link — it shows as an embedded player above the photos. Blank hides it."
+          />
           <div>
             <span className="mb-1 block text-[0.82rem] font-medium">Photos</span>
             <p className="mb-2 text-[0.75rem] text-muted-foreground">
@@ -391,7 +406,7 @@ const AdminContent = () => {
         {/* ---------------- Team ---------------- */}
         <SectionCard
           title="Team"
-          subtitle="Scrolling round team photos"
+          subtitle="Swipeable round team photos"
           enabled={config.team.enabled}
           onToggle={(v) => patch("team", { enabled: v })}
         >
@@ -400,6 +415,14 @@ const AdminContent = () => {
             <TextField label="Highlight" value={config.team.headingHighlight} onChange={(v) => patch("team", { headingHighlight: v })} />
           </div>
           <TextArea label="Subheading" value={config.team.subheading} onChange={(v) => patch("team", { subheading: v })} />
+          <label className="flex items-center gap-2 text-[0.85rem]">
+            <input
+              type="checkbox"
+              checked={config.team.autoScroll !== false}
+              onChange={(e) => patch("team", { autoScroll: e.target.checked })}
+            />
+            Auto-scroll the carousel (pauses on touch/hover)
+          </label>
           <div>
             <span className="mb-1 block text-[0.82rem] font-medium">Members</span>
             <ListEditor
@@ -421,6 +444,33 @@ const AdminContent = () => {
               )}
             />
           </div>
+        </SectionCard>
+
+        {/* ---------------- Location ---------------- */}
+        <SectionCard
+          title="Location"
+          subtitle="Map + address"
+          enabled={config.location.enabled}
+          onToggle={(v) => patch("location", { enabled: v })}
+        >
+          <div className="grid grid-cols-2 gap-2">
+            <TextField label="Heading" value={config.location.heading} onChange={(v) => patch("location", { heading: v })} />
+            <TextField label="Highlight" value={config.location.headingHighlight} onChange={(v) => patch("location", { headingHighlight: v })} />
+          </div>
+          <TextField
+            label="Address"
+            value={config.location.address}
+            onChange={(v) => patch("location", { address: v })}
+            placeholder="Studio address, Jaipur"
+            hint="Shown beside the map. Used to build the map if no embed link is given."
+          />
+          <TextArea
+            label="Google Maps embed (optional)"
+            value={config.location.mapsEmbedUrl}
+            onChange={(v) => patch("location", { mapsEmbedUrl: v })}
+            rows={2}
+            hint="For a precise pin: Google Maps → Share → Embed a map → copy the link (or the whole <iframe>) and paste here. Leave blank to use the address above."
+          />
         </SectionCard>
 
         {/* ---------------- Order + visibility ---------------- */}

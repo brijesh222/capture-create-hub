@@ -23,6 +23,7 @@ type HomeSections = Pick<
   | "bookBand"
   | "faq"
   | "team"
+  | "location"
   | "booking"
   | "sectionOrder"
 >;
@@ -228,9 +229,17 @@ export const defaultHomeSections: HomeSections = {
     heading: "Meet the ",
     headingHighlight: "team",
     subheading: "The people behind the camera.",
+    autoScroll: true,
     members: [
       { id: "tm1", name: "Brijesh Prajapat", role: "Lead photographer", photoUrl: "" },
     ],
+  },
+  location: {
+    enabled: false,
+    heading: "Find ",
+    headingHighlight: "us",
+    address: "Jaipur, Rajasthan",
+    mapsEmbedUrl: "",
   },
   booking: {
     enabled: true,
@@ -262,6 +271,7 @@ export const defaultHomeSections: HomeSections = {
     "reviews",
     "bookBand",
     "faq",
+    "location",
   ],
 };
 
@@ -275,6 +285,7 @@ export const defaultSiteConfig: SiteConfig = {
       "Weddings, maternity and newborn shoots across Rajasthan — unhurried on the day, edited by hand, delivered in three weeks.",
     ctaBookText: "Book a shoot",
     ctaWhatsAppText: "WhatsApp us",
+    videoUrl: "",
   },
   categories: [
     { id: "1", name: "Wedding", slug: "wedding", description: "Timeless moments of your special day", icon: "💍", thumbnailUrl: "", media: [], startingPrice: "from ₹45,000", visible: true, intro: "From the haldi to the last dance, we cover the whole day without asking you to pose for it. You get on with your wedding; we work around it.", included: ["Full-day coverage from getting ready to reception", "Two photographers on the Complete package and above", "Edited gallery you can share with family abroad", "Print-ready files at full resolution"], reassurance: ["We scout the venue before the day", "Backup cameras and backup storage, always", "Travel anywhere in India at actual cost"], faqItems: [{ id: "wedding-f1", question: "Do you cover multiple functions on different days?", answer: "Yes. The Signature package covers all functions. For two or three separate days we'll quote based on your schedule." }, { id: "wedding-f2", question: "Will you direct us, or stay in the background?", answer: "Mostly background. We'll guide you for family portraits and couple shots, and stay out of the way for everything else." }, { id: "wedding-f3", question: "How far in advance should we book?", answer: "Peak season dates in Rajasthan go 6-9 months ahead. Off-season, a month is usually enough." }], },
@@ -293,6 +304,8 @@ export const defaultSiteConfig: SiteConfig = {
     footerBrandName: "Dusk Angle",
     footerTagline: "Premium photography & videography services. Capturing moments that last forever.",
     footerCopyrightPrefix: "Dusk Angle",
+    instagram: "duskangle.in",
+    website: "www.duskangle.com",
   },
   form: {
     formTitle: "Book Your Shoot",
@@ -407,6 +420,57 @@ export const defaultSiteConfig: SiteConfig = {
         "--gold-light": "199 34% 36%",
         "--gold-dark": "199 48% 17%",
         "--border": "205 16% 88%",
+      },
+    },
+    {
+      id: "rose",
+      name: "Pink (Maternity)",
+      cssVars: {
+        "--primary": "338 44% 44%",
+        "--primary-foreground": "36 18% 98%",
+        "--accent": "338 34% 94%",
+        "--accent-foreground": "338 44% 30%",
+        "--secondary": "338 34% 94%",
+        "--secondary-foreground": "338 44% 30%",
+        "--ring": "338 44% 44%",
+        "--gold": "338 44% 44%",
+        "--gold-light": "338 40% 56%",
+        "--gold-dark": "338 48% 34%",
+        "--border": "335 24% 89%",
+      },
+    },
+    {
+      id: "festive",
+      name: "Orange (Festive / Wedding)",
+      cssVars: {
+        "--primary": "22 68% 46%",
+        "--primary-foreground": "36 18% 98%",
+        "--accent": "28 48% 93%",
+        "--accent-foreground": "22 68% 32%",
+        "--secondary": "28 48% 93%",
+        "--secondary-foreground": "22 68% 32%",
+        "--ring": "22 68% 46%",
+        "--gold": "22 68% 46%",
+        "--gold-light": "28 66% 56%",
+        "--gold-dark": "20 70% 36%",
+        "--border": "30 30% 88%",
+      },
+    },
+    {
+      id: "royal",
+      name: "Purple (Premium)",
+      cssVars: {
+        "--primary": "268 34% 41%",
+        "--primary-foreground": "36 18% 98%",
+        "--accent": "268 26% 93%",
+        "--accent-foreground": "268 34% 28%",
+        "--secondary": "268 26% 93%",
+        "--secondary-foreground": "268 34% 28%",
+        "--ring": "268 34% 41%",
+        "--gold": "268 34% 41%",
+        "--gold-light": "268 32% 53%",
+        "--gold-dark": "268 38% 31%",
+        "--border": "270 20% 89%",
       },
     },
   ],
@@ -541,6 +605,7 @@ export function mergeWithDefaults(partial: Partial<SiteConfig>): SiteConfig {
         ? partial.team.members
         : defaultHomeSections.team.members,
     },
+    location: { ...defaultHomeSections.location, ...partial.location },
     booking: {
       ...defaultHomeSections.booking,
       ...partial.booking,

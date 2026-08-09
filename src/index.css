@@ -223,6 +223,24 @@
   margin-bottom: 2mm;
 }
 
+.invoice-sheet .inv-brand {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4mm;
+  padding: 5mm 14mm 8mm;
+  border-top: 1px solid #e5e7eb;
+  margin: 0 14mm;
+  font-size: 10pt;
+  color: #1a6079;
+}
+.invoice-sheet .inv-brand a {
+  color: #1a6079;
+  text-decoration: none;
+  font-weight: 600;
+}
+.invoice-sheet .inv-brand-dot { color: #9ca3af; }
+
 @media print {
   /* Hide the app, show only the invoice. */
   body > #root { display: none !important; }

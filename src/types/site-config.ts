@@ -25,6 +25,11 @@ export interface CategoryConfig {
   /** Page title and description for search engines. */
   seoTitle?: string;
   seoDescription?: string;
+  /** Optional theme preset applied only on this service's page (auto-theme by
+   *  category, e.g. pink for maternity). Blank = use the site's default theme. */
+  themeId?: string;
+  /** Optional YouTube link shown as an embedded player on the service page. */
+  videoUrl?: string;
 }
 
 export interface MediaItem {
@@ -64,6 +69,9 @@ export interface HeroConfig {
   subtitle: string;
   ctaBookText: string;
   ctaWhatsAppText: string;
+  /** Optional YouTube link. When set, a silent looping video fills the hero
+   *  cover slot (same 4/5 aspect ratio) instead of the cover photo. */
+  videoUrl?: string;
 }
 
 export interface ContactConfig {
@@ -73,6 +81,10 @@ export interface ContactConfig {
   footerBrandName: string;
   footerTagline: string;
   footerCopyrightPrefix: string;
+  /** Instagram handle, e.g. "duskangle.in". Shown in the footer and on invoices. */
+  instagram?: string;
+  /** Public website, e.g. "www.duskangle.com". Shown in the footer and on invoices. */
+  website?: string;
 }
 
 export interface FormConfig {
@@ -185,6 +197,8 @@ export interface WorkConfig {
   photos: WorkPhoto[];
   ctaText: string;
   ctaHref: string;
+  /** Optional YouTube link shown as an embedded player above the photo grid. */
+  videoUrl?: string;
 }
 
 export interface PackageItem {
@@ -264,6 +278,17 @@ export interface FaqConfig {
   items: FaqItem[];
 }
 
+export interface LocationConfig {
+  enabled: boolean;
+  heading: string;
+  headingHighlight: string;
+  /** Address text shown beside the map. Falls back to contact.location. */
+  address: string;
+  /** A Google Maps embed URL, a pasted <iframe> embed, or a plain place/address
+   *  we turn into an embed. Blank + blank address hides the section. */
+  mapsEmbedUrl: string;
+}
+
 export interface TeamMember {
   id: string;
   name: string;
@@ -277,6 +302,8 @@ export interface TeamConfig {
   headingHighlight: string;
   subheading: string;
   members: TeamMember[];
+  /** Slowly auto-advance the carousel. Pauses on hover/touch. Default on. */
+  autoScroll?: boolean;
 }
 
 export interface BookingSlot {
@@ -317,7 +344,8 @@ export type HomeSectionKey =
   | "reviews"
   | "bookBand"
   | "faq"
-  | "team";
+  | "team"
+  | "location";
 
 export interface SiteConfig {
   hero: HeroConfig;
@@ -347,6 +375,7 @@ export interface SiteConfig {
   bookBand: BookBandConfig;
   faq: FaqConfig;
   team: TeamConfig;
+  location: LocationConfig;
   booking: BookingConfig;
   sectionOrder: HomeSectionKey[];
 }

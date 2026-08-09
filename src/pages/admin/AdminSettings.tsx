@@ -112,6 +112,8 @@ const AdminSettings = () => {
           <TextField label="WhatsApp / phone number" value={config.contact.whatsappNumber} onChange={(v) => patch("contact", { whatsappNumber: v })} hint="Digits with country code, e.g. 917023433374" />
           <TextField label="Email" value={config.contact.email} onChange={(v) => patch("contact", { email: v })} />
           <TextField label="Location" value={config.contact.location} onChange={(v) => patch("contact", { location: v })} />
+          <TextField label="Instagram handle" value={config.contact.instagram ?? ""} onChange={(v) => patch("contact", { instagram: v })} hint="Without the @, e.g. duskangle.in. Shows in footer + invoices." />
+          <TextField label="Website" value={config.contact.website ?? ""} onChange={(v) => patch("contact", { website: v })} hint="e.g. www.duskangle.com" />
           <TextField label="Footer brand name" value={config.contact.footerBrandName} onChange={(v) => patch("contact", { footerBrandName: v })} />
           <TextField label="Footer tagline" value={config.contact.footerTagline} onChange={(v) => patch("contact", { footerTagline: v })} />
         </SectionCard>

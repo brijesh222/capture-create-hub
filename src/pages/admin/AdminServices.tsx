@@ -97,6 +97,13 @@ const AdminServices = () => {
             value={svc.intro ?? svc.description}
             onChange={(v) => update(svc.id, { intro: v })}
           />
+          <TextField
+            label="Featured video (YouTube URL)"
+            value={svc.videoUrl ?? ""}
+            onChange={(v) => update(svc.id, { videoUrl: v })}
+            placeholder="https://youtu.be/…"
+            hint="Paste any YouTube link — it becomes an embedded player above the gallery. Blank hides it."
+          />
 
           <div>
             <span className="mb-1 block text-[0.82rem] font-medium">What's included</span>
@@ -199,6 +206,25 @@ const AdminServices = () => {
                 </div>
               )}
             />
+          </div>
+
+          <div>
+            <span className="mb-1 block text-[0.82rem] font-medium">Page colour theme</span>
+            <select
+              className="w-full rounded-lg border border-border bg-card px-3 py-2 text-[0.88rem]"
+              value={svc.themeId ?? ""}
+              onChange={(e) => update(svc.id, { themeId: e.target.value })}
+            >
+              <option value="">Default (site theme)</option>
+              {config.themePresets.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-[0.75rem] text-muted-foreground">
+              Colours this service's page only — e.g. pink for maternity. Home page stays on the default.
+            </p>
           </div>
 
           <div className="grid grid-cols-1 gap-2">
