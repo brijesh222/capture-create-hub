@@ -100,7 +100,10 @@ const AdminInvoices = () => {
       return;
     }
     setSaving(true);
-    const res = await createManualInvoice(form);
+    const res = await createManualInvoice({
+      ...form,
+      deliverables: form.deliverables.map((d) => d.trim()).filter(Boolean),
+    });
     setSaving(false);
     if (!res.ok) {
       toast.error(res.message);
@@ -161,7 +164,7 @@ const AdminInvoices = () => {
             <span className="mb-1 block text-[0.82rem] font-medium">Deliverables / services</span>
             <ListEditor
               items={form.deliverables.map((text) => ({ text }))}
-              onChange={(rows) => set({ deliverables: rows.map((r) => r.text).filter(Boolean) })}
+              onChange={(rows) => set({ deliverables: rows.map((r) => r.text) })}
               makeNew={() => ({ text: "" })}
               addLabel="Add line"
               renderItem={(row, u) => (
