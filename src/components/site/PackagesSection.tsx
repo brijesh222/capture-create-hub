@@ -10,7 +10,7 @@ const PackagesSection = ({ onBook }: { onBook: (packageId: string) => void }) =>
   if (!packages.enabled || !packages.items.length) return null;
 
   return (
-    <section id="packages" className="shell py-12 md:py-14">
+    <section className="shell py-12 md:py-14">
       <SectionHeading
         heading={packages.heading}
         highlight={packages.headingHighlight}

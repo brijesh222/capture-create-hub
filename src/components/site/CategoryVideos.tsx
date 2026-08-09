@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { isYouTubeShort, toYouTubeEmbed } from "@/lib/video";
+import { resolveVideo } from "@/lib/video";
 import VideoEmbed from "./VideoEmbed";
 
 /**
@@ -9,11 +9,11 @@ import VideoEmbed from "./VideoEmbed";
  * whole block hides when empty.
  */
 const CategoryVideos = ({ videos, title }: { videos?: string[]; title?: string }) => {
-  const valid = (videos ?? []).filter((u) => toYouTubeEmbed(u));
+  const valid = (videos ?? []).filter((u) => resolveVideo(u));
   if (!valid.length) return null;
 
-  const reels = valid.filter(isYouTubeShort);
-  const wides = valid.filter((u) => !isYouTubeShort(u));
+  const reels = valid.filter((u) => resolveVideo(u)?.portrait);
+  const wides = valid.filter((u) => !resolveVideo(u)?.portrait);
 
   return (
     <div className="mb-8 flex flex-col gap-4">

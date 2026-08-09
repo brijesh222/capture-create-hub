@@ -59,7 +59,13 @@ const Index = () => {
       <main>
         <HeroSection onBook={() => openBooking()} />
         {config.sectionOrder.map((key) =>
-          sections[key] ? <div key={key}>{sections[key]}</div> : null
+          sections[key] ? (
+            // Each section is anchorable by its key (e.g. #team, #location) so
+            // nav links added in admin work. scroll-mt clears the sticky header.
+            <div key={key} id={key} className="scroll-mt-24">
+              {sections[key]}
+            </div>
+          ) : null
         )}
       </main>
       <SiteFooter />

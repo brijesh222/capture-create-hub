@@ -10,7 +10,7 @@ const AboutBlock = () => {
   const photo = about.photoUrl || categoryFallbackImage("pre-wedding");
 
   return (
-    <section id="about" className="shell py-12 md:py-14">
+    <section className="shell py-12 md:py-14">
       <div className="grid items-center gap-7 lg:grid-cols-[0.85fr_1.15fr] lg:gap-12">
         <div
           className="aspect-square rounded-[20px] bg-muted bg-cover bg-center"

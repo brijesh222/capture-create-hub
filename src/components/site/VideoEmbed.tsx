@@ -1,16 +1,15 @@
 import { cn } from "@/lib/utils";
-import { youTubeId } from "@/lib/video";
+import { resolveVideo } from "@/lib/video";
 
 /**
- * YouTube player. Two modes:
- *  - default: a responsive 16:9 player with controls (galleries, service pages).
- *  - cover:   fills the parent container in any aspect ratio, cropping to cover
- *             (used for the hero, so a video sits in the same 4/5 slot as the
- *             cover photo). Pair with `background` for autoplay-muted-loop and
- *             no controls, i.e. a silent background video.
+ * Plays a video from any supported link — YouTube (incl. Shorts), Instagram
+ * (reels/posts), Vimeo, or a direct video file. Two modes:
+ *  - default: a player with controls, sized 16:9 or 9:16 (vertical).
+ *  - cover:   fills the parent in any aspect (used for the hero). Pair with
+ *             `background` for autoplay-muted-loop, no controls, where the
+ *             source supports it (YouTube, Vimeo, direct files).
  *
- * Renders nothing when the URL isn't a valid YouTube link, so a blank admin
- * field simply hides the video.
+ * Renders nothing when the URL isn't a recognisable video link.
  */
 const VideoEmbed = ({
   url,
@@ -25,61 +24,81 @@ const VideoEmbed = ({
   className?: string;
   cover?: boolean;
   background?: boolean;
-  /** Render in a vertical 9:16 frame (YouTube Shorts / Reels). */
   reel?: boolean;
 }) => {
-  const id = url ? youTubeId(url) : null;
-  if (!id) return null;
+  const v = url ? resolveVideo(url) : null;
+  if (!v) return null;
 
-  const params = new URLSearchParams({
-    rel: "0",
-    modestbranding: "1",
-    playsinline: "1",
-  });
-  if (background) {
-    params.set("autoplay", "1");
-    params.set("mute", "1");
-    params.set("loop", "1");
-    params.set("playlist", id); // required for loop to work
-    params.set("controls", "0");
+  const portrait = reel || v.portrait;
+  const noInteract = background ? "pointer-events-none" : "";
+
+  // ---- build the media element ----
+  let media: JSX.Element;
+
+  if (v.kind === "file") {
+    media = (
+      <video
+        src={v.fileUrl}
+        className={cn(
+          cover ? "absolute inset-0 h-full w-full object-cover" : "absolute inset-0 h-full w-full",
+          noInteract
+        )}
+        autoPlay={background}
+        muted={background}
+        loop={background}
+        controls={!background}
+        playsInline
+      />
+    );
+  } else {
+    let src = v.embedUrl;
+    if (v.kind === "youtube") {
+      const id = v.embedUrl.split("/embed/")[1] ?? "";
+      const p = new URLSearchParams({ rel: "0", modestbranding: "1", playsinline: "1" });
+      if (background) {
+        p.set("autoplay", "1");
+        p.set("mute", "1");
+        p.set("loop", "1");
+        p.set("playlist", id);
+        p.set("controls", "0");
+      }
+      src = `${v.embedUrl}?${p.toString()}`;
+    } else if (v.kind === "vimeo" && background) {
+      src = `${v.embedUrl}?autoplay=1&muted=1&loop=1&background=1`;
+    }
+
+    // YouTube/Vimeo are 16:9 sources — in cover mode they scale to fill and crop.
+    // Instagram embeds carry their own layout, so they just fill the box.
+    const coverClass =
+      v.kind === "youtube" || v.kind === "vimeo"
+        ? "absolute left-1/2 top-1/2 aspect-video h-full w-auto min-w-full -translate-x-1/2 -translate-y-1/2"
+        : "absolute inset-0 h-full w-full";
+
+    media = (
+      <iframe
+        src={src}
+        title={title || "Video"}
+        className={cn(cover ? coverClass : "absolute inset-0 h-full w-full", noInteract)}
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowFullScreen={!background}
+        loading="lazy"
+      />
+    );
   }
-  const src = `https://www.youtube.com/embed/${id}?${params.toString()}`;
-
-  const common = {
-    src,
-    title: title || "Video",
-    allow:
-      "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share",
-    allowFullScreen: !background,
-    loading: "lazy" as const,
-  };
 
   if (cover) {
-    // Fill the parent (which sets the aspect ratio) and crop the 16:9 video to
-    // cover it. h-full + aspect-video derives the width; min-w-full guards the
-    // narrow case; the parent clips the overflow.
-    return (
-      <div className={cn("relative overflow-hidden", className)}>
-        <iframe
-          {...common}
-          className={cn(
-            "absolute left-1/2 top-1/2 aspect-video h-full w-auto min-w-full -translate-x-1/2 -translate-y-1/2",
-            background && "pointer-events-none"
-          )}
-        />
-      </div>
-    );
+    return <div className={cn("relative overflow-hidden", className)}>{media}</div>;
   }
 
   return (
     <div
       className={cn(
         "relative w-full overflow-hidden rounded-[20px] border border-border bg-muted",
-        reel ? "aspect-[9/16]" : "aspect-video",
+        portrait ? "aspect-[9/16]" : "aspect-video",
         className
       )}
     >
-      <iframe {...common} className="absolute inset-0 h-full w-full" />
+      {media}
     </div>
   );
 };

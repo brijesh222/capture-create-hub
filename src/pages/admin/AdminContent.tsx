@@ -105,7 +105,7 @@ const AdminContent = () => {
             <ListEditor
               items={config.nav.links}
               onChange={(links) => patch("nav", { links })}
-              makeNew={() => ({ id: uid(), label: "New link", href: "#" })}
+              makeNew={() => ({ id: uid(), label: "New link", href: "#services" })}
               addLabel="Add link"
               renderItem={(link, update) => (
                 <div className="grid grid-cols-2 gap-2">
@@ -115,15 +115,30 @@ const AdminContent = () => {
                     placeholder="Label"
                     onChange={(e) => update({ label: e.target.value })}
                   />
-                  <input
-                    className="rounded-lg border border-border bg-card px-3 py-2 text-[0.88rem]"
-                    value={link.href}
-                    placeholder="#services"
-                    onChange={(e) => update({ href: e.target.value })}
-                  />
+                  <div className="flex flex-col gap-1">
+                    <input
+                      className="rounded-lg border border-border bg-card px-3 py-2 text-[0.88rem]"
+                      value={link.href}
+                      placeholder="#services or https://…"
+                      onChange={(e) => update({ href: e.target.value })}
+                    />
+                    <select
+                      className="rounded-lg border border-border bg-card px-3 py-1.5 text-[0.8rem] text-muted-foreground"
+                      value=""
+                      onChange={(e) => e.target.value && update({ href: e.target.value })}
+                    >
+                      <option value="">Jump to a section…</option>
+                      {config.sectionOrder.map((k) => (
+                        <option key={k} value={`#${k}`}>{SECTION_TITLES[k]}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               )}
             />
+            <p className="mt-1 text-[0.75rem] text-muted-foreground">
+              Pick a section from the dropdown (fills the link), or type a full URL for an external page.
+            </p>
           </div>
         </SectionCard>
 

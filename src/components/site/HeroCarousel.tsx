@@ -8,7 +8,7 @@ import {
   type CarouselApi,
 } from "@/components/ui/carousel";
 import VideoEmbed from "./VideoEmbed";
-import { toYouTubeEmbed } from "@/lib/video";
+import { resolveVideo } from "@/lib/video";
 import type { HeroSlide } from "@/types/site-config";
 
 /**
@@ -29,7 +29,7 @@ const HeroCarousel = ({
 
   // Only slides we can actually render.
   const valid = slides.filter((s) =>
-    s.type === "video" ? Boolean(s.url && toYouTubeEmbed(s.url)) : Boolean(s.url)
+    s.type === "video" ? Boolean(s.url && resolveVideo(s.url)) : Boolean(s.url)
   );
 
   useEffect(() => {

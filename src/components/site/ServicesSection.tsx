@@ -11,7 +11,7 @@ const ServicesSection = () => {
   if (!services.length) return null;
 
   return (
-    <section id="services" className="shell py-12 md:py-14">
+    <section className="shell py-12 md:py-14">
       <SectionHeading
         heading={config.servicesHeading}
         highlight={config.servicesHeadingHighlight}

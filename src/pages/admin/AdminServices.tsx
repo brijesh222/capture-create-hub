@@ -101,15 +101,15 @@ const AdminServices = () => {
             <span className="mb-1 block text-[0.82rem] font-medium">Videos &amp; Reels (YouTube)</span>
             <ListEditor
               items={(svc.videos ?? []).map((url) => ({ url }))}
-              onChange={(rows) => update(svc.id, { videos: rows.map((r) => r.url).filter(Boolean), videoUrl: "" })}
+              onChange={(rows) => update(svc.id, { videos: rows.map((r) => r.url), videoUrl: "" })}
               makeNew={() => ({ url: "" })}
               addLabel="Add video"
               renderItem={(row, u) => (
-                <input className="w-full rounded-lg border border-border bg-card px-3 py-2 text-[0.88rem]" value={row.url} placeholder="youtu.be/…  or  youtube.com/shorts/…" onChange={(e) => u({ url: e.target.value })} />
+                <input className="w-full rounded-lg border border-border bg-card px-3 py-2 text-[0.88rem]" value={row.url} placeholder="YouTube, Shorts, Instagram Reel, Vimeo, or .mp4 link" onChange={(e) => u({ url: e.target.value })} />
               )}
             />
             <p className="mt-1 text-[0.75rem] text-muted-foreground">
-              Paste YouTube links — normal videos show wide, Shorts/Reels show vertical. They appear as a swipeable row above the gallery.
+              Paste any video link — YouTube, YouTube Shorts, Instagram Reels/posts, Vimeo, or a direct video file. Vertical clips (Shorts/Reels) show tall; wide videos fill the width.
             </p>
           </div>
 

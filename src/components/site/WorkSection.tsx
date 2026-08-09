@@ -34,7 +34,7 @@ const WorkSection = () => {
   if (!work.enabled || !photos.length) return null;
 
   return (
-    <section id="work" className="shell py-12 md:py-14">
+    <section className="shell py-12 md:py-14">
       <SectionHeading
         heading={work.heading}
         highlight={work.headingHighlight}
