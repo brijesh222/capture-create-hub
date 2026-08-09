@@ -287,6 +287,7 @@ export const defaultSiteConfig: SiteConfig = {
     ctaBookText: "Book a shoot",
     ctaWhatsAppText: "WhatsApp us",
     videoUrl: "",
+    slides: [],
   },
   categories: [
     { id: "1", name: "Wedding", slug: "wedding", description: "Timeless moments of your special day", icon: "💍", thumbnailUrl: "", media: [], startingPrice: "from ₹45,000", visible: true, intro: "From the haldi to the last dance, we cover the whole day without asking you to pose for it. You get on with your wedding; we work around it.", included: ["Full-day coverage from getting ready to reception", "Two photographers on the Complete package and above", "Edited gallery you can share with family abroad", "Print-ready files at full resolution"], reassurance: ["We scout the venue before the day", "Backup cameras and backup storage, always", "Travel anywhere in India at actual cost"], faqItems: [{ id: "wedding-f1", question: "Do you cover multiple functions on different days?", answer: "Yes. The Signature package covers all functions. For two or three separate days we'll quote based on your schedule." }, { id: "wedding-f2", question: "Will you direct us, or stay in the background?", answer: "Mostly background. We'll guide you for family portraits and couple shots, and stay out of the way for everything else." }, { id: "wedding-f3", question: "How far in advance should we book?", answer: "Peak season dates in Rajasthan go 6-9 months ahead. Off-season, a month is usually enough." }], },

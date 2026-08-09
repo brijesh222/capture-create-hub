@@ -64,6 +64,13 @@ export interface FormFieldConfig {
   options?: string[];
 }
 
+export interface HeroSlide {
+  id: string;
+  type: "image" | "video";
+  /** Image URL, or a YouTube link when type is "video". */
+  url: string;
+}
+
 export interface HeroConfig {
   backgroundImageUrl: string;
   tagline: string;
@@ -72,9 +79,12 @@ export interface HeroConfig {
   subtitle: string;
   ctaBookText: string;
   ctaWhatsAppText: string;
-  /** Optional YouTube link. When set, a silent looping video fills the hero
-   *  cover slot (same 4/5 aspect ratio) instead of the cover photo. */
+  /** Optional YouTube link. When set (and no slides), a silent looping video
+   *  fills the hero cover slot instead of the cover photo. */
   videoUrl?: string;
+  /** Carousel of images/videos for the cover slot. When 1+ valid slides exist
+   *  they replace the single photo/video, auto-playing and swipeable. */
+  slides?: HeroSlide[];
 }
 
 export interface ContactConfig {

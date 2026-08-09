@@ -4,6 +4,7 @@ import { getWhatsAppLink } from "@/lib/site-config-utils";
 import { toYouTubeEmbed } from "@/lib/video";
 import { WhatsAppDot } from "./parts";
 import VideoEmbed from "./VideoEmbed";
+import HeroCarousel from "./HeroCarousel";
 import heroFallback from "@/assets/hero-wedding.jpg";
 
 const HeroSection = ({ onBook }: { onBook: () => void }) => {
@@ -11,6 +12,10 @@ const HeroSection = ({ onBook }: { onBook: () => void }) => {
   const { hero } = config;
   const image = hero.backgroundImageUrl || heroFallback;
   const hasVideo = Boolean(hero.videoUrl && toYouTubeEmbed(hero.videoUrl));
+  const slides = hero.slides ?? [];
+  const hasSlides = slides.some((s) =>
+    s.type === "video" ? Boolean(s.url) : Boolean(s.url)
+  );
 
   return (
     <section className="shell py-12 md:py-14">
@@ -60,7 +65,9 @@ const HeroSection = ({ onBook }: { onBook: () => void }) => {
           ) : null}
         </div>
 
-        {hasVideo ? (
+        {hasSlides ? (
+          <HeroCarousel slides={slides} label={hero.title || config.branding.siteName} />
+        ) : hasVideo ? (
           <VideoEmbed
             url={hero.videoUrl}
             title={hero.title || config.branding.siteName}

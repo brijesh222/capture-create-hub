@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, Check, Star } from "lucide-react";
 import { useSiteConfig } from "@/context/SiteConfigContext";
 import { getWhatsAppLink } from "@/lib/site-config-utils";
 import { applyThemeVars, applyCustomThemeColors } from "@/lib/theme-utils";
+import { fetchApprovedReviews, type PublicReview } from "@/lib/reviews-api";
 import { getCategoryThumbnail } from "@/lib/category-images";
 import BookingFlow, { type BookingStart } from "@/components/booking/BookingFlow";
 import SiteHeader from "@/components/site/SiteHeader";
@@ -76,10 +77,22 @@ const CategoryPage = () => {
     ];
   }, [service]);
 
-  const reviews = useMemo(
-    () => config.reviews.items.filter((r) => r.serviceSlug === service?.slug),
-    [config.reviews.items, service?.slug]
-  );
+  const [dbReviews, setDbReviews] = useState<PublicReview[]>([]);
+  useEffect(() => {
+    let active = true;
+    fetchApprovedReviews().then((r) => active && setDbReviews(r));
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Approved reviews tagged with this service win; the config testimonials are
+  // the fallback until real ones come in.
+  const reviews = useMemo(() => {
+    const fromDb = dbReviews.filter((r) => r.serviceSlug === service?.slug);
+    if (fromDb.length) return fromDb;
+    return config.reviews.items.filter((r) => r.serviceSlug === service?.slug);
+  }, [dbReviews, config.reviews.items, service?.slug]);
 
   const others = config.categories
     .filter((c) => c.visible !== false && c.slug !== slug)

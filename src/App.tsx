@@ -14,6 +14,7 @@ import AdminBookings from "./pages/admin/AdminBookings";
 import AdminReviews from "./pages/admin/AdminReviews";
 import AdminContent from "./pages/admin/AdminContent";
 import AdminSettings from "./pages/admin/AdminSettings";
+import AdminInvoices from "./pages/admin/AdminInvoices";
 import ReviewPage from "./pages/ReviewPage";
 
 const queryClient = new QueryClient();
@@ -46,6 +47,7 @@ const App = () => (
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminBookings />} />
               <Route path="reviews" element={<AdminReviews />} />
+              <Route path="invoices" element={<AdminInvoices />} />
               <Route path="content" element={<AdminContent />} />
               <Route path="settings" element={<AdminSettings />} />
             </Route>

@@ -109,6 +109,19 @@ const AdminLayout = () => {
               Reviews
             </NavLink>
             <NavLink
+              to="/admin/invoices"
+              className={({ isActive }) =>
+                cn(
+                  "rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
+                  isActive
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                )
+              }
+            >
+              Invoices
+            </NavLink>
+            <NavLink
               to="/admin/settings"
               className={({ isActive }) =>
                 cn(

@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Star } from "lucide-react";
+import { PenLine, Star } from "lucide-react";
 import { useSiteConfig } from "@/context/SiteConfigContext";
 import { fetchApprovedReviews, type PublicReview } from "@/lib/reviews-api";
 import { SectionHeading } from "./parts";
+import ReviewForm from "./ReviewForm";
 
 function initials(name: string): string {
   return name
@@ -17,6 +18,7 @@ const ReviewsSection = () => {
   const { config } = useSiteConfig();
   const { reviews } = config;
   const [approved, setApproved] = useState<PublicReview[]>([]);
+  const [formOpen, setFormOpen] = useState(false);
 
   // Real approved reviews from the database take priority; the config's manual
   // reviews are the fallback for a studio that hasn't collected any yet.
@@ -32,12 +34,27 @@ const ReviewsSection = () => {
     ? approved.map((r, i) => ({ id: `db-${i}`, ...r }))
     : reviews.items;
 
-  if (!reviews.enabled || !items.length) return null;
+  if (!reviews.enabled) return null;
 
   return (
     <section className="shell py-12 md:py-14">
-      <SectionHeading heading={reviews.heading} highlight={reviews.headingHighlight} />
+      <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+        <SectionHeading
+          heading={reviews.heading}
+          highlight={reviews.headingHighlight}
+          className="mb-0"
+        />
+        <button
+          type="button"
+          onClick={() => setFormOpen(true)}
+          className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 py-2.5 text-[0.9rem] font-medium transition-colors hover:border-foreground"
+        >
+          <PenLine className="h-4 w-4" aria-hidden="true" />
+          Leave a review
+        </button>
+      </div>
 
+      {items.length ? (
       <div className="grid gap-4 md:grid-cols-3">
         {items.map((r) => (
           <figure
@@ -90,6 +107,13 @@ const ReviewsSection = () => {
           </figure>
         ))}
       </div>
+      ) : (
+        <p className="rounded-[14px] border border-dashed border-border py-10 text-center text-[0.92rem] text-muted-foreground">
+          No reviews yet — be the first to leave one.
+        </p>
+      )}
+
+      <ReviewForm open={formOpen} onClose={() => setFormOpen(false)} />
     </section>
   );
 };
