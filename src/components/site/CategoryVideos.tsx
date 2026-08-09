@@ -1,32 +1,37 @@
+import { cn } from "@/lib/utils";
 import { isYouTubeShort, toYouTubeEmbed } from "@/lib/video";
 import VideoEmbed from "./VideoEmbed";
 
 /**
- * A swipeable row of a service's videos. Reels render vertical (9:16) and
- * regular videos wide (16:9), so a mix sits together tidily. Scrolls sideways
- * on any screen; invalid links are skipped. Renders nothing when empty.
+ * A service's videos laid out on a responsive grid that fills the available
+ * width. Landscape videos go full width (one) or two-up (several); vertical
+ * Reels sit in a tighter multi-column grid. Invalid links are skipped, and the
+ * whole block hides when empty.
  */
 const CategoryVideos = ({ videos, title }: { videos?: string[]; title?: string }) => {
   const valid = (videos ?? []).filter((u) => toYouTubeEmbed(u));
   if (!valid.length) return null;
 
+  const reels = valid.filter(isYouTubeShort);
+  const wides = valid.filter((u) => !isYouTubeShort(u));
+
   return (
-    <div className="mb-8 flex snap-x gap-4 overflow-x-auto pb-3">
-      {valid.map((url, i) => {
-        const reel = isYouTubeShort(url);
-        return (
-          <div
-            key={`${url}-${i}`}
-            className={
-              reel
-                ? "w-[210px] shrink-0 snap-start sm:w-[250px]"
-                : "w-[86%] shrink-0 snap-start sm:w-[460px]"
-            }
-          >
-            <VideoEmbed url={url} title={`${title ?? "Video"} ${i + 1}`} reel={reel} />
-          </div>
-        );
-      })}
+    <div className="mb-8 flex flex-col gap-4">
+      {wides.length ? (
+        <div className={cn("grid gap-4", wides.length > 1 && "md:grid-cols-2")}>
+          {wides.map((url, i) => (
+            <VideoEmbed key={`w-${url}-${i}`} url={url} title={`${title ?? "Video"} ${i + 1}`} />
+          ))}
+        </div>
+      ) : null}
+
+      {reels.length ? (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+          {reels.map((url, i) => (
+            <VideoEmbed key={`r-${url}-${i}`} url={url} title={`${title ?? "Reel"} ${i + 1}`} reel />
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 };
