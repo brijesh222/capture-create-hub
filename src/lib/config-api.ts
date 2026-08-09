@@ -78,6 +78,19 @@ export async function saveConfigToCloud(
       return { ok: false, message: "Save was rejected. Sign in again and retry." };
     }
 
+    // Snapshot this version for the super admin's history/undo. Best-effort:
+    // a failed snapshot must not fail the save.
+    try {
+      await supabase.from("config_history").insert({
+        config,
+        saved_by: sessionData.session.user.id,
+        saved_by_email: sessionData.session.user.email ?? "",
+        note: "",
+      });
+    } catch {
+      /* ignore */
+    }
+
     return { ok: true, message: "Saved. Changes are live for all visitors." };
   } catch (e) {
     return {

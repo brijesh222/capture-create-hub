@@ -16,6 +16,7 @@ import AdminContent from "./pages/admin/AdminContent";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminInvoices from "./pages/admin/AdminInvoices";
 import AdminAccess from "./pages/admin/AdminAccess";
+import AdminHistory from "./pages/admin/AdminHistory";
 import ReviewPage from "./pages/ReviewPage";
 
 const queryClient = new QueryClient();
@@ -51,6 +52,7 @@ const App = () => (
               <Route path="invoices" element={<AdminInvoices />} />
               <Route path="content" element={<AdminContent />} />
               <Route path="settings" element={<AdminSettings />} />
+              <Route path="history" element={<AdminHistory />} />
               <Route path="access" element={<AdminAccess />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
