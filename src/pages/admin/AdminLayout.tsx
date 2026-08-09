@@ -134,6 +134,19 @@ const AdminLayout = () => {
             >
               Settings
             </NavLink>
+            <NavLink
+              to="/admin/access"
+              className={({ isActive }) =>
+                cn(
+                  "rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
+                  isActive
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                )
+              }
+            >
+              Admins
+            </NavLink>
           </nav>
           <div className="flex items-center gap-2">
             {/* Save only publishes site content; it does nothing on the
