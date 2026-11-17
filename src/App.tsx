@@ -18,6 +18,7 @@ import AdminInvoices from "./pages/admin/AdminInvoices";
 import AdminAccess from "./pages/admin/AdminAccess";
 import AdminHistory from "./pages/admin/AdminHistory";
 import ReviewPage from "./pages/ReviewPage";
+import Privacy from "./pages/Privacy";
 
 const queryClient = new QueryClient();
 
@@ -45,6 +46,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/category/:slug" element={<CategoryPage />} />
             <Route path="/review/:bookingId" element={<ReviewPage />} />
+            <Route path="/privacy" element={<Privacy />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminBookings />} />
